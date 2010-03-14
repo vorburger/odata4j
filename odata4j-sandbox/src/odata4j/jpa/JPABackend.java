@@ -1,0 +1,212 @@
+package odata4j.jpa;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+
+
+import core4j.Enumerable;
+import core4j.Func1;
+import core4j.Predicate1;
+
+import odata4j.backend.EntityRequest;
+import odata4j.backend.EntityResponse;
+import odata4j.backend.ODataBackend;
+import odata4j.backend.OEntity;
+import odata4j.backend.OProperty;
+import odata4j.edm.EdmDataServices;
+import odata4j.edm.EdmEntityContainer;
+import odata4j.edm.EdmEntitySet;
+import odata4j.edm.EdmEntityType;
+import odata4j.edm.EdmProperty;
+import odata4j.edm.EdmSchema;
+import odata4j.edm.EdmType;
+
+public class JPABackend implements ODataBackend {
+
+	private final EntityManagerFactory emf;
+	private final String namespace;
+	private final EdmDataServices metadata;
+	
+	public JPABackend(EntityManagerFactory emf, String namespace){
+		this.emf = emf;
+		this.namespace = namespace;
+		
+		this.metadata = EdmGenerator.buildEdm(emf, namespace);
+	}
+	@Override
+	public EdmDataServices getMetadata() {
+		 return metadata;
+	}
+	@Override
+	public EntityResponse getResponse(EntityRequest request) {
+		
+		final String entityName = request.getEntityName();
+		
+		final EntityManager em = emf.createEntityManager();
+		final EdmDataServices metadata = getMetadata();
+		try {
+		
+			final EdmEntitySet ees = findEdmEntitySet(metadata, entityName);
+			final String fqEntityName = ees.type.getFQName();
+			
+			final EntityType<?> entityType = findEntityType(em,entityName);
+			final String entityKey = ees.type.key;
+		    Enumerable<Object> entityObjects =enumDynamicEntities(em,entityType.getJavaType());
+			final List<OEntity> entities = entityObjects.select(new Func1<Object,OEntity>(){
+				public OEntity apply(final Object input) {
+					
+					return new OEntity(){
+						public List<OProperty<?>> getProperties() {
+							return jpaEntityToOProperties(ees, entityType, input);
+						}
+
+						@Override
+						public List<OProperty<?>> getKeyProperties() {
+							return Enumerable.create(getProperties()).where(new Predicate1<OProperty<?>>(){
+								public boolean apply(OProperty<?> input) {
+									return input.getName().equals(entityKey);
+								}}).toList();
+						}};
+				}}).toList();
+			
+			
+			return new EntityResponse(){
+				public List<OEntity> getEntities() {
+					return entities;
+				}
+
+				@Override
+				public EdmEntitySet getEntitySet() {
+					return ees;
+				}};
+			
+			
+		} finally {
+			em.close();
+		}
+		
+		
+	}
+	
+	private static List<OProperty<?>> jpaEntityToOProperties(EdmEntitySet ees, EntityType<?> entityType, Object jpaEntity){
+		List<OProperty<?>> rt = new ArrayList<OProperty<?>>();
+		
+		try {
+			for(EdmProperty ep : ees.type.properties){
+				
+				Attribute<?,?> att = entityType.getAttribute(ep.name);
+				Member member = att.getJavaMember();
+				
+				if (!(member instanceof Field))
+					throw new UnsupportedOperationException("Implement member" + member);
+				Field field = (Field)member;
+				Object value = field.get(jpaEntity);
+				if (ep.type == EdmType.STRING){
+					String sValue = (String)value;
+					rt.add(new PropertyImpl<String>(ep.name,ep.type,sValue));
+				} else if (ep.type == EdmType.INT32){
+					Integer iValue = (Integer)value;
+					rt.add(new PropertyImpl<Integer>(ep.name,ep.type,iValue));
+				}else if (ep.type == EdmType.BOOLEAN){
+					Boolean bValue = (Boolean)value;
+					rt.add(new PropertyImpl<Boolean>(ep.name,ep.type,bValue));
+				}  else if (ep.type == EdmType.INT16){
+					Short sValue = (Short)value;
+					rt.add(new PropertyImpl<Short>(ep.name,ep.type,sValue));
+				}else if (ep.type == EdmType.DECIMAL){
+					BigDecimal dValue = (BigDecimal)value;
+					rt.add(new PropertyImpl<BigDecimal>(ep.name,ep.type,dValue));
+				}else if (ep.type == EdmType.BINARY){
+					byte[] bValue = (byte[])value;
+					rt.add(new PropertyImpl<byte[]>(ep.name,ep.type,bValue));
+				} else {
+					throw new UnsupportedOperationException("Implement " + ep.type);
+				}
+				
+				
+			}
+		} catch(Exception e){
+			throw new RuntimeException(e);
+		}
+		
+		
+		return rt;
+	}
+	
+	
+	private static class PropertyImpl<T> implements OProperty<T> {
+
+		private final String name;
+		private final EdmType type;
+		private final T value;
+		
+		public PropertyImpl(String name, EdmType type, T value){
+			this.name = name;
+			this.type = type;
+			this.value = value;
+		}
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public EdmType getType() {
+			return type;
+		}
+
+		@Override
+		public T getValue() {
+			return value;
+		}
+		
+	}
+	
+	private static EdmEntitySet findEdmEntitySet(EdmDataServices metadata, String name){
+		for(EdmSchema schema : metadata.schemas){
+			for(EdmEntityContainer eec : schema.entityContainers){
+				for(EdmEntitySet ees : eec.entitySets){
+					if (ees.name.equals(name))
+						return ees;
+				}
+			}
+		}
+		throw new RuntimeException("EdmEntitySet " + name + " not found");
+	}
+	
+	
+	
+	private static EntityType<?> findEntityType(EntityManager em, String entityName){
+		for(EntityType<?> et : em.getMetamodel().getEntities()){
+			if (et.getName().equals(entityName))
+				return et;
+		}
+		throw new RuntimeException("Entity type " + entityName + " not found");
+	}
+	
+	
+	public static Enumerable<Object> enumDynamicEntities(EntityManager em,Class<?> clazz){
+		CriteriaQuery<Object> cq = em.getCriteriaBuilder().createQuery();
+		
+		cq = cq.select(cq.from(em.getMetamodel().entity(clazz)));
+		TypedQuery<Object> tq = em.createQuery(cq);
+		
+		
+		List<Object> results = tq.getResultList();
+		return Enumerable.create(results);
+	}
+	
+	
+
+
+}
