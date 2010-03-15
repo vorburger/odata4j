@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -18,6 +19,8 @@ import core4j.Enumerable;
 import core4j.Func1;
 import core4j.Predicate1;
 
+import odata4j.backend.EntitiesRequest;
+import odata4j.backend.EntitiesResponse;
 import odata4j.backend.EntityRequest;
 import odata4j.backend.EntityResponse;
 import odata4j.backend.ODataBackend;
@@ -47,55 +50,111 @@ public class JPABackend implements ODataBackend {
 	public EdmDataServices getMetadata() {
 		 return metadata;
 	}
+	
 	@Override
-	public EntityResponse getResponse(EntityRequest request) {
+	public EntityResponse getEntity(EntityRequest request) {
 		
-		final String entityName = request.getEntityName();
+		return common(request.getEntityName(),request.getEntityKey(),new Func1<Context,EntityResponse>(){
+			public EntityResponse apply(Context input) {
+				return getEntity(input);
+			}});
 		
-		final EntityManager em = emf.createEntityManager();
-		final EdmDataServices metadata = getMetadata();
+	}
+	
+	
+	@Override
+	public EntitiesResponse getEntities(EntitiesRequest request) {
+		
+		return common(request.getEntityName(),null,new Func1<Context,EntitiesResponse>(){
+			public EntitiesResponse apply(Context input) {
+				return getEntities(input);
+			}});
+		
+	}
+	
+	private class Context {
+		EdmDataServices metadata;
+		EdmEntitySet ees;
+		EntityType<?> entityType;
+		String keyPropertyName;
+		EntityManager em;
+		Object entityKey;
+	}
+	
+	
+	private EntityResponse getEntity(final Context context){
+		
+		Object jpaEntity = context.em.find(context.entityType.getJavaType(), context.entityKey);
+		if (jpaEntity == null)
+			throw new RuntimeException(context.entityType.getJavaType()+" not found with key " + context.entityKey);
+		
+		final OEntity entity = makeEntity(context,jpaEntity);
+		return new EntityResponse(){
+
+			@Override
+			public OEntity getEntity() {
+				return entity;
+			}
+
+			@Override
+			public EdmEntitySet getEntitySet() {
+				return context.ees;
+			}};
+		
+		
+	}
+	
+	private OEntity makeEntity(final Context context, final Object jpaEntity){
+		return new OEntity(){
+			public List<OProperty<?>> getProperties() {
+				return jpaEntityToOProperties(context.ees, context.entityType, jpaEntity);
+			}
+
+			@Override
+			public List<OProperty<?>> getKeyProperties() {
+				return Enumerable.create(getProperties()).where(new Predicate1<OProperty<?>>(){
+					public boolean apply(OProperty<?> input) {
+						return input.getName().equals(context.keyPropertyName);
+					}}).toList();
+			}};
+	}
+	
+	
+	private EntitiesResponse getEntities(final Context context){
+		
+		Enumerable<Object> entityObjects =enumDynamicEntities(context.em,context.entityType.getJavaType());
+		final List<OEntity> entities = entityObjects.select(new Func1<Object,OEntity>(){
+			public OEntity apply(final Object input) {
+				return makeEntity(context,input);
+			}}).toList();
+		
+		
+		return new EntitiesResponse(){
+			public List<OEntity> getEntities() {
+				return entities;
+			}
+
+			@Override
+			public EdmEntitySet getEntitySet() {
+				return context.ees;
+			}};
+	}
+	
+	private <T> T common(final String entityName, Object entityKey, Func1<Context,T> fn){
+		Context context = new Context();
+		
+		context.em = emf.createEntityManager();
 		try {
-		
-			final EdmEntitySet ees = findEdmEntitySet(metadata, entityName);
-			final String fqEntityName = ees.type.getFQName();
-			
-			final EntityType<?> entityType = findEntityType(em,entityName);
-			final String entityKey = ees.type.key;
-		    Enumerable<Object> entityObjects =enumDynamicEntities(em,entityType.getJavaType());
-			final List<OEntity> entities = entityObjects.select(new Func1<Object,OEntity>(){
-				public OEntity apply(final Object input) {
-					
-					return new OEntity(){
-						public List<OProperty<?>> getProperties() {
-							return jpaEntityToOProperties(ees, entityType, input);
-						}
-
-						@Override
-						public List<OProperty<?>> getKeyProperties() {
-							return Enumerable.create(getProperties()).where(new Predicate1<OProperty<?>>(){
-								public boolean apply(OProperty<?> input) {
-									return input.getName().equals(entityKey);
-								}}).toList();
-						}};
-				}}).toList();
-			
-			
-			return new EntityResponse(){
-				public List<OEntity> getEntities() {
-					return entities;
-				}
-
-				@Override
-				public EdmEntitySet getEntitySet() {
-					return ees;
-				}};
-			
+			context.metadata = getMetadata();
+			context.ees = findEdmEntitySet(metadata, entityName);
+			context.entityType = findEntityType(context.em,entityName);
+			context.keyPropertyName = context.ees.type.key;
+			context.entityKey = entityKey;
+			return fn.apply(context);
 			
 		} finally {
-			em.close();
+			context.em.close();
 		}
-		
-		
 	}
 	
 	private static List<OProperty<?>> jpaEntityToOProperties(EdmEntitySet ees, EntityType<?> entityType, Object jpaEntity){
@@ -126,6 +185,9 @@ public class JPABackend implements ODataBackend {
 				}else if (ep.type == EdmType.DECIMAL){
 					BigDecimal dValue = (BigDecimal)value;
 					rt.add(new PropertyImpl<BigDecimal>(ep.name,ep.type,dValue));
+				}else if (ep.type == EdmType.DATETIME){
+					Date dValue = (Date)value;
+					rt.add(new PropertyImpl<Date>(ep.name,ep.type,dValue));
 				}else if (ep.type == EdmType.BINARY){
 					byte[] bValue = (byte[])value;
 					rt.add(new PropertyImpl<byte[]>(ep.name,ep.type,bValue));

@@ -4,8 +4,8 @@ import java.util.List;
 
 import odata4j.edm.EdmEntitySet;
 
-public interface EntityResponse {
+public interface EntitiesResponse {
 
 	public EdmEntitySet getEntitySet();
-	public OEntity getEntity();
+	public List<OEntity> getEntities();
 }

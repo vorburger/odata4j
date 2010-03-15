@@ -6,6 +6,8 @@ public interface ODataBackend {
 
 	public abstract EdmDataServices getMetadata();
 	
-	public abstract EntityResponse getResponse(EntityRequest request);
+	public abstract EntitiesResponse getEntities(EntitiesRequest request);
+	
+	public abstract EntityResponse getEntity(EntityRequest request);
 	
 }

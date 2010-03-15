@@ -2,6 +2,7 @@ package odata4j.jpa;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -56,7 +57,8 @@ public class EdmGenerator {
 			return EdmType.INT32;
 		if (javaType.equals(Boolean.class)||javaType.equals(Boolean.TYPE))
 			return EdmType.BOOLEAN;
-
+		if (javaType.equals(Date.class))
+			return EdmType.DATETIME;
 		
 		
 		throw new UnsupportedOperationException(javaType.toString());

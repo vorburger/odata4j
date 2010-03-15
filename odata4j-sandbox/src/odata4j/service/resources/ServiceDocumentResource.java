@@ -16,7 +16,7 @@ import odata4j.xml.ServiceDocumentWriter;
 public class ServiceDocumentResource {
 
 	@GET
-	@Produces(MediaType.APPLICATION_XML)
+	@Produces(ODataConstants.APPLICATION_XML_CHARSET)
 	public Response getServiceDocument(){
 		
 		ODataService service = ODataService.getInstance();
@@ -27,6 +27,6 @@ public class ServiceDocumentResource {
 		ServiceDocumentWriter.write(service.getBaseUri(), s,w);
 		
 
-		return Response.ok(w.toString(),"application/xml;charset=iso-8859-1").header("DataServiceVersion","1.0").build();
+		return Response.ok(w.toString(),ODataConstants.APPLICATION_XML_CHARSET).header("DataServiceVersion","1.0").build();
 	}
 }

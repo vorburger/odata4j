@@ -1,5 +1,7 @@
 package odata4j.xml;
 
+import org.joda.time.DateTime;
+
 public class BaseWriter {
 
 	protected static String edmx = "http://schemas.microsoft.com/ado/2007/06/edmx";
@@ -12,4 +14,8 @@ public class BaseWriter {
 	
 	protected static final String scheme = "http://schemas.microsoft.com/ado/2007/08/dataservices/scheme";
 	protected static final String related = "http://schemas.microsoft.com/ado/2007/08/dataservices/related/";
+	
+	protected static String toString(DateTime utc){
+		return utc.toString("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	}
 }
