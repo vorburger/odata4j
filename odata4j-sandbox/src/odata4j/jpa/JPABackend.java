@@ -54,7 +54,7 @@ public class JPABackend implements ODataBackend {
 	@Override
 	public EntityResponse getEntity(EntityRequest request) {
 		
-		return common(request.getEntityName(),request.getEntityKey(),new Func1<Context,EntityResponse>(){
+		return common(request.getEntityName(),request.getEntityKey(),null,null,new Func1<Context,EntityResponse>(){
 			public EntityResponse apply(Context input) {
 				return getEntity(input);
 			}});
@@ -65,7 +65,7 @@ public class JPABackend implements ODataBackend {
 	@Override
 	public EntitiesResponse getEntities(EntitiesRequest request) {
 		
-		return common(request.getEntityName(),null,new Func1<Context,EntitiesResponse>(){
+		return common(request.getEntityName(),null,request.getTop(),request.getSkip(),new Func1<Context,EntitiesResponse>(){
 			public EntitiesResponse apply(Context input) {
 				return getEntities(input);
 			}});
@@ -79,6 +79,8 @@ public class JPABackend implements ODataBackend {
 		String keyPropertyName;
 		EntityManager em;
 		Object entityKey;
+		Integer top;
+		Integer skip;
 	}
 	
 	
@@ -122,7 +124,7 @@ public class JPABackend implements ODataBackend {
 	
 	private EntitiesResponse getEntities(final Context context){
 		
-		Enumerable<Object> entityObjects =enumDynamicEntities(context.em,context.entityType.getJavaType());
+		Enumerable<Object> entityObjects =enumDynamicEntities(context.em,context.entityType.getJavaType(),context.top,context.skip);
 		final List<OEntity> entities = entityObjects.select(new Func1<Object,OEntity>(){
 			public OEntity apply(final Object input) {
 				return makeEntity(context,input);
@@ -140,7 +142,7 @@ public class JPABackend implements ODataBackend {
 			}};
 	}
 	
-	private <T> T common(final String entityName, Object entityKey, Func1<Context,T> fn){
+	private <T> T common(final String entityName, Object entityKey, Integer top, Integer skip,Func1<Context,T> fn){
 		Context context = new Context();
 		
 		context.em = emf.createEntityManager();
@@ -150,6 +152,8 @@ public class JPABackend implements ODataBackend {
 			context.entityType = findEntityType(context.em,entityName);
 			context.keyPropertyName = context.ees.type.key;
 			context.entityKey = entityKey;
+			context.top = top;
+			context.skip = skip;
 			return fn.apply(context);
 			
 		} finally {
@@ -257,12 +261,20 @@ public class JPABackend implements ODataBackend {
 	}
 	
 	
-	public static Enumerable<Object> enumDynamicEntities(EntityManager em,Class<?> clazz){
+	public static Enumerable<Object> enumDynamicEntities(EntityManager em,Class<?> clazz, Integer top, Integer skip){
 		CriteriaQuery<Object> cq = em.getCriteriaBuilder().createQuery();
 		
 		cq = cq.select(cq.from(em.getMetamodel().entity(clazz)));
 		TypedQuery<Object> tq = em.createQuery(cq);
-		
+		if (top != null) {
+			if (top.equals(0)){
+				return Enumerable.empty(Object.class);
+			}
+			tq = tq.setMaxResults(top);
+		}
+		if (skip != null){
+			tq = tq.setFirstResult(skip);
+		}
 		
 		List<Object> results = tq.getResultList();
 		return Enumerable.create(results);

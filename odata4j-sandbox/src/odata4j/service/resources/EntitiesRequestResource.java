@@ -7,6 +7,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -30,13 +31,23 @@ public class EntitiesRequestResource {
 	
 	@GET
 	@Produces(ODataConstants.APPLICATION_ATOM_XML_CHARSET)
-	public Response getEntities(final @PathParam("entityName") String entityName){
-		log.info(String.format("getEntities(%s)",entityName));
+	public Response getEntities(final @PathParam("entityName") String entityName, @QueryParam("$top") String top, @QueryParam("$skip") String skip){
+		log.info(String.format("getEntities(%s,%s,%s)",entityName,top,skip));
+		
+		final Integer finalTop = top==null?null:Integer.parseInt(top);
+		final Integer finalSkip = skip==null?null:Integer.parseInt(skip);
 		
 		ODataService service = ODataService.getInstance();
 		EntitiesRequest request = new EntitiesRequest(){
 			public String getEntityName() {
 				return entityName;
+			}
+			public Integer getTop() {
+				return finalTop;
+			}
+			@Override
+			public Integer getSkip() {
+				return finalSkip;
 			}};
 		EntitiesResponse response = service.getBackend().getEntities(request);
 		
