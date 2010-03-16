@@ -10,14 +10,11 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
-
-
-import core4j.Enumerable;
-import core4j.Func1;
-import core4j.Predicate1;
 
 import odata4j.backend.EntitiesRequest;
 import odata4j.backend.EntitiesResponse;
@@ -26,13 +23,17 @@ import odata4j.backend.EntityResponse;
 import odata4j.backend.ODataBackend;
 import odata4j.backend.OEntity;
 import odata4j.backend.OProperty;
+import odata4j.backend.QueryInfo;
+import odata4j.backend.QueryInfo.OrderBy;
 import odata4j.edm.EdmDataServices;
 import odata4j.edm.EdmEntityContainer;
 import odata4j.edm.EdmEntitySet;
-import odata4j.edm.EdmEntityType;
 import odata4j.edm.EdmProperty;
 import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
+import core4j.Enumerable;
+import core4j.Func1;
+import core4j.Predicate1;
 
 public class JPABackend implements ODataBackend {
 
@@ -54,7 +55,7 @@ public class JPABackend implements ODataBackend {
 	@Override
 	public EntityResponse getEntity(EntityRequest request) {
 		
-		return common(request.getEntityName(),request.getEntityKey(),null,null,new Func1<Context,EntityResponse>(){
+		return common(request.getEntityName(),request.getEntityKey(),null,new Func1<Context,EntityResponse>(){
 			public EntityResponse apply(Context input) {
 				return getEntity(input);
 			}});
@@ -65,7 +66,7 @@ public class JPABackend implements ODataBackend {
 	@Override
 	public EntitiesResponse getEntities(EntitiesRequest request) {
 		
-		return common(request.getEntityName(),null,request.getTop(),request.getSkip(),new Func1<Context,EntitiesResponse>(){
+		return common(request.getEntityName(),null,request.getQueryInfo(),new Func1<Context,EntitiesResponse>(){
 			public EntitiesResponse apply(Context input) {
 				return getEntities(input);
 			}});
@@ -79,8 +80,7 @@ public class JPABackend implements ODataBackend {
 		String keyPropertyName;
 		EntityManager em;
 		Object entityKey;
-		Integer top;
-		Integer skip;
+		QueryInfo query;
 	}
 	
 	
@@ -124,7 +124,7 @@ public class JPABackend implements ODataBackend {
 	
 	private EntitiesResponse getEntities(final Context context){
 		
-		Enumerable<Object> entityObjects =enumDynamicEntities(context.em,context.entityType.getJavaType(),context.top,context.skip);
+		Enumerable<Object> entityObjects =enumDynamicEntities(context.em,context.entityType.getJavaType(),context.query);
 		final List<OEntity> entities = entityObjects.select(new Func1<Object,OEntity>(){
 			public OEntity apply(final Object input) {
 				return makeEntity(context,input);
@@ -142,7 +142,7 @@ public class JPABackend implements ODataBackend {
 			}};
 	}
 	
-	private <T> T common(final String entityName, Object entityKey, Integer top, Integer skip,Func1<Context,T> fn){
+	private <T> T common(final String entityName, Object entityKey, QueryInfo query,Func1<Context,T> fn){
 		Context context = new Context();
 		
 		context.em = emf.createEntityManager();
@@ -152,8 +152,7 @@ public class JPABackend implements ODataBackend {
 			context.entityType = findEntityType(context.em,entityName);
 			context.keyPropertyName = context.ees.type.key;
 			context.entityKey = entityKey;
-			context.top = top;
-			context.skip = skip;
+			context.query = query;
 			return fn.apply(context);
 			
 		} finally {
@@ -261,19 +260,33 @@ public class JPABackend implements ODataBackend {
 	}
 	
 	
-	public static Enumerable<Object> enumDynamicEntities(EntityManager em,Class<?> clazz, Integer top, Integer skip){
-		CriteriaQuery<Object> cq = em.getCriteriaBuilder().createQuery();
+	public static Enumerable<Object> enumDynamicEntities(EntityManager em,Class<?> clazz, QueryInfo query){
+		CriteriaBuilder cb =  em.getCriteriaBuilder();
+		CriteriaQuery<Object> cq = cb.createQuery();
 		
-		cq = cq.select(cq.from(em.getMetamodel().entity(clazz)));
+		Root<?> root = cq.from(em.getMetamodel().entity(clazz));
+		cq = cq.select(root);
+		
+		if (query.orderBy != null){
+			for(OrderBy orderBy : query.orderBy){
+				if (orderBy.ascending)
+					cq =  cq.orderBy(cb.asc(root.get(orderBy.field)));
+				else
+					cq =  cq.orderBy(cb.desc(root.get(orderBy.field)));
+			}
+			
+		}
+		
+		
 		TypedQuery<Object> tq = em.createQuery(cq);
-		if (top != null) {
-			if (top.equals(0)){
+		if (query.top != null) {
+			if (query.top.equals(0)){
 				return Enumerable.empty(Object.class);
 			}
-			tq = tq.setMaxResults(top);
+			tq = tq.setMaxResults(query.top);
 		}
-		if (skip != null){
-			tq = tq.setFirstResult(skip);
+		if (query.skip != null){
+			tq = tq.setFirstResult(query.skip);
 		}
 		
 		List<Object> results = tq.getResultList();

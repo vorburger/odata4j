@@ -1,15 +1,9 @@
 package odata4j.xml;
 
 import java.io.Writer;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.ws.rs.core.MediaType;
 import javax.xml.namespace.QName;
-
-import org.apache.commons.codec.binary.Base64;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import odata4j.backend.EntitiesResponse;
 import odata4j.backend.EntityResponse;
@@ -18,6 +12,10 @@ import odata4j.backend.OProperty;
 import odata4j.edm.EdmEntitySet;
 import odata4j.edm.EdmNavigationProperty;
 import odata4j.edm.EdmType;
+
+import org.apache.commons.codec.binary.Base64;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 public class AtomFeedWriter extends BaseWriter {
 

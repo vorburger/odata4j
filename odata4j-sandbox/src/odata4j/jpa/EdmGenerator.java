@@ -15,7 +15,6 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.Type.PersistenceType;
 
-
 import odata4j.edm.EdmAssociation;
 import odata4j.edm.EdmAssociationEnd;
 import odata4j.edm.EdmAssociationSet;
@@ -30,8 +29,6 @@ import odata4j.edm.EdmProperty;
 import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
 import odata4j.jpa.eclipselink.EclipseLink;
-
-
 import core4j.Enumerable;
 import core4j.Func1;
 import core4j.Predicate1;

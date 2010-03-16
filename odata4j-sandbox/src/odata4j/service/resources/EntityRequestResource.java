@@ -7,23 +7,14 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang.StringUtils;
-
-import core4j.Enumerable;
-import core4j.Func1;
-
-import odata4j.backend.EntitiesRequest;
-import odata4j.backend.EntitiesResponse;
 import odata4j.backend.EntityRequest;
 import odata4j.backend.EntityResponse;
-import odata4j.backend.OEntity;
-import odata4j.backend.OProperty;
-import odata4j.edm.EdmDataServices;
 import odata4j.service.ODataService;
 import odata4j.xml.AtomFeedWriter;
+
+import org.apache.commons.lang.StringUtils;
 
 @Path("{entityName}{id: (\\(.*\\))}")
 public class EntityRequestResource {

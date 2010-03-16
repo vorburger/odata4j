@@ -3,22 +3,17 @@ package odata4j.server;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
-import com.sun.jersey.api.container.filter.LoggingFilter;
 import com.sun.jersey.api.container.httpserver.HttpServerFactory;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
-import com.sun.jersey.spi.container.ResourceFilter;
 import com.sun.jersey.spi.container.ResourceFilterFactory;
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
-import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import core4j.CoreUtils;
