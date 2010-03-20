@@ -5,13 +5,13 @@ import java.io.Writer;
 import javax.ws.rs.core.MediaType;
 import javax.xml.namespace.QName;
 
+import odata4j.core.OEntity;
+import odata4j.core.OProperty;
 import odata4j.edm.EdmEntitySet;
 import odata4j.edm.EdmNavigationProperty;
 import odata4j.edm.EdmType;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityResponse;
-import odata4j.producer.OEntity;
-import odata4j.producer.OProperty;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;

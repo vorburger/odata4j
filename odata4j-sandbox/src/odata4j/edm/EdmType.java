@@ -28,5 +28,12 @@ public enum EdmType {
 	public String toTypeString(){
 		return typeString;
 	}
+	public static EdmType fromTypeString(String value){
+		for(EdmType et : values()){
+			if (et.toTypeString().equals(value))
+				return et;
+		}
+		return null;
+	}
 	
 }

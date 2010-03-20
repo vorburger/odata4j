@@ -16,19 +16,20 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
+import odata4j.core.OEntity;
+import odata4j.core.OProperty;
 import odata4j.edm.EdmDataServices;
 import odata4j.edm.EdmEntityContainer;
 import odata4j.edm.EdmEntitySet;
 import odata4j.edm.EdmProperty;
 import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
+import odata4j.internal.PropertyImpl;
 import odata4j.producer.EntitiesRequest;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityRequest;
 import odata4j.producer.EntityResponse;
 import odata4j.producer.ODataBackend;
-import odata4j.producer.OEntity;
-import odata4j.producer.OProperty;
 import odata4j.producer.QueryInfo;
 import core4j.Enumerable;
 import core4j.Func1;
@@ -208,33 +209,7 @@ public class JPABackend implements ODataBackend {
 	}
 	
 	
-	private static class PropertyImpl<T> implements OProperty<T> {
 
-		private final String name;
-		private final EdmType type;
-		private final T value;
-		
-		public PropertyImpl(String name, EdmType type, T value){
-			this.name = name;
-			this.type = type;
-			this.value = value;
-		}
-		@Override
-		public String getName() {
-			return name;
-		}
-
-		@Override
-		public EdmType getType() {
-			return type;
-		}
-
-		@Override
-		public T getValue() {
-			return value;
-		}
-		
-	}
 	
 	private static EdmEntitySet findEdmEntitySet(EdmDataServices metadata, String name){
 		for(EdmSchema schema : metadata.schemas){

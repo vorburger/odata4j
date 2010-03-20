@@ -58,7 +58,7 @@ public class Sandbox {
 		 url = "http://api.visitmix.com/OData.svc/";
 		 request = ODataClientRequest.create(url);
 		 
-		 ODataClient client = new ODataClient(true);
+		 ODataClient client = new ODataClient();
 		 
 		 //client.insertEntity()
 		 
@@ -66,7 +66,7 @@ public class Sandbox {
 		 dumpCollections(client,url);  if (true) return;
 		 
 		 AtomEntry last = null;
-		 for(AtomEntry ei : client.getEntities(request)){
+		 for(AtomEntry ei : client.getEntities(request).entries){
 			 log(ei.toString());
 			 last = ei;
 		 }

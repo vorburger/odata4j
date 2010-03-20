@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import junit.framework.Assert;
-
 import odata4j.edm.EdmType;
 
 import org.joda.time.DateTime;

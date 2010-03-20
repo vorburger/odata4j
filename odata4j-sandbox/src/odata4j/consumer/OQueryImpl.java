@@ -1,0 +1,153 @@
+package odata4j.consumer;
+
+import java.util.Iterator;
+
+import odata4j.consumer.ODataClient.AtomEntry;
+import odata4j.consumer.ODataClient.AtomFeed;
+import odata4j.consumer.ODataClient.DataServicesAtomEntry;
+import odata4j.core.OEntity;
+import odata4j.core.OQuery;
+import odata4j.internal.InternalUtil;
+import core4j.Enumerable;
+import core4j.Func;
+import core4j.Func1;
+import core4j.ReadonlyIterator;
+
+public class OQueryImpl<T> implements OQuery<T> {
+
+	private final ODataClient client;
+	private final Class<T> entityType;
+	private final String serviceRootUri;
+	private final String entitySetName;
+	
+	private Integer top;
+	private Integer skip;
+	private String orderBy;
+	private String filter;
+	private String select;
+	
+	public OQueryImpl(ODataClient client, Class<T> entityType, String serviceRootUri, String entitySetName){
+		this.client = client;
+		this.entityType = entityType;
+		this.serviceRootUri = serviceRootUri;
+		this.entitySetName = entitySetName;
+	}
+	
+	@Override
+	public OQuery<T> top(int top) {
+		this.top = top;
+		return this;
+	}
+	
+	@Override
+	public OQuery<T> skip(int skip) {
+		this.skip = skip;
+		return this;
+	}
+	
+	@Override
+	public OQuery<T> orderBy(String orderBy) {
+		this.orderBy = orderBy;
+		return this;
+	}
+	
+	@Override
+	public OQuery<T> filter(String filter) {
+		this.filter = filter;
+		return this;
+	}
+	
+	@Override
+	public OQuery<T> select(String select) {
+		this.select = select;
+		return this;
+	}
+	
+	@Override
+	public Enumerable<T> get() {
+		
+	
+		ODataClientRequest request = ODataClientRequest.create(serviceRootUri + entitySetName);
+		
+		if (top != null){
+			request = request.queryParam("$top",Integer.toString(top));
+		}
+		if (skip != null){
+			request = request.queryParam("$skip",Integer.toString(skip));
+		}
+		if (orderBy != null){
+			request = request.queryParam("$orderby",orderBy);
+		}
+		if (filter != null){
+			request = request.queryParam("$filter",filter);
+		}
+		if (select != null){
+			request = request.queryParam("$select",select);
+		}
+		
+		Enumerable<AtomEntry> entries = getEntries(request);
+		
+		if (entityType.equals(OEntity.class)){
+			
+			return entries.select(new Func1<AtomEntry,OEntity>(){
+				public OEntity apply(AtomEntry input) {
+					DataServicesAtomEntry dsae = (DataServicesAtomEntry)input;
+					return InternalUtil.toEntity(dsae);
+				}}).cast(entityType);
+			
+		}
+			
+		throw new UnsupportedOperationException("Entity type " + entityType);
+	}
+	
+	private Enumerable<AtomEntry> getEntries(final ODataClientRequest request){
+		
+		return Enumerable.createFromIterator(new Func<Iterator<AtomEntry>>(){
+			public Iterator<AtomEntry> apply() {
+				return new AtomEntryIterator(request);
+			}});
+		
+		
+	}
+	
+	private class AtomEntryIterator extends ReadonlyIterator<AtomEntry> {
+
+		private ODataClientRequest request;
+		private AtomFeed feed;
+		private Iterator<AtomEntry> feedEntries;
+		
+		public AtomEntryIterator(ODataClientRequest request){
+			this.request = request;
+		}
+		@Override
+		protected IterationResult<AtomEntry> advance() throws Exception {
+			
+			if (feed == null) {
+				feed = client.getEntities(request);
+				feedEntries = feed.entries.iterator();
+			}
+			
+			if (feedEntries.hasNext())
+				return IterationResult.next(feedEntries.next());
+			
+			if (feed.next == null)
+				return IterationResult.done();
+			
+			String skiptoken = feed.next.substring(feed.next.indexOf("$skiptoken=")+"$skiptoken=".length());
+			request = request.queryParam("$skiptoken", skiptoken);
+			feed = null;
+			
+			return advance();  // TODO stackoverflow possible here
+		}
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}
