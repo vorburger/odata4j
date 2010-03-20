@@ -1,4 +1,4 @@
-package odata4j.service.resources;
+package odata4j.producer.resources;
 
 public class ODataConstants {
 

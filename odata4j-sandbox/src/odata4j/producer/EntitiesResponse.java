@@ -1,4 +1,4 @@
-package odata4j.backend;
+package odata4j.producer;
 
 import java.util.List;
 

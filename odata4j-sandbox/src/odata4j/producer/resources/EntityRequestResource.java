@@ -1,4 +1,4 @@
-package odata4j.service.resources;
+package odata4j.producer.resources;
 
 import java.io.StringWriter;
 import java.util.logging.Logger;
@@ -9,9 +9,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
-import odata4j.backend.EntityRequest;
-import odata4j.backend.EntityResponse;
-import odata4j.service.ODataService;
+import odata4j.producer.EntityRequest;
+import odata4j.producer.EntityResponse;
+import odata4j.producer.ODataProducer;
 import odata4j.xml.AtomFeedWriter;
 
 import org.apache.commons.lang.StringUtils;
@@ -45,7 +45,7 @@ public class EntityRequestResource {
 		}
 		final Object idObjectFinal = idObject;
 		
-		ODataService service = ODataService.getInstance();
+		ODataProducer service = ODataProducer.getInstance();
 		EntityRequest request = new EntityRequest(){
 			public String getEntityName() {
 				return entityName;

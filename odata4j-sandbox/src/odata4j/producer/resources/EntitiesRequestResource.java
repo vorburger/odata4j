@@ -1,4 +1,4 @@
-package odata4j.service.resources;
+package odata4j.producer.resources;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -12,14 +12,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-import odata4j.backend.EntitiesRequest;
-import odata4j.backend.EntitiesResponse;
-import odata4j.backend.QueryInfo;
 import odata4j.expression.BoolCommonExpression;
 import odata4j.expression.CommonExpression;
 import odata4j.expression.ExpressionParser;
 import odata4j.expression.OrderByExpression;
-import odata4j.service.ODataService;
+import odata4j.producer.EntitiesRequest;
+import odata4j.producer.EntitiesResponse;
+import odata4j.producer.ODataProducer;
+import odata4j.producer.QueryInfo;
 import odata4j.xml.AtomFeedWriter;
 
 @Path("{entityName}")
@@ -41,7 +41,7 @@ public class EntitiesRequestResource {
 		final QueryInfo finalQuery = new QueryInfo(parseTop(top),parseSkip(skip),parseFilter(filter),parseOrderBy(orderBy));
 		
 		
-		ODataService service = ODataService.getInstance();
+		ODataProducer service = ODataProducer.getInstance();
 		EntitiesRequest request = new EntitiesRequest(){
 			public String getEntityName() {
 				return entityName;

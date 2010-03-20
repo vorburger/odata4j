@@ -1,15 +1,14 @@
-package odata4j.service;
+package odata4j.producer;
 
-import odata4j.backend.ODataBackend;
 
-public class ODataService {
+public class ODataProducer {
 
-	private static ODataService INSTANCE;
-	public static void setInstance(ODataService instance){
+	private static ODataProducer INSTANCE;
+	public static void setInstance(ODataProducer instance){
 		INSTANCE = instance;
 	}
 	
-	public static ODataService getInstance(){
+	public static ODataProducer getInstance(){
 		return INSTANCE;
 	}
 	
@@ -18,7 +17,7 @@ public class ODataService {
 	private final String baseUri;
 	
 	
-	public ODataService(String baseUri, ODataBackend backend ) {
+	public ODataProducer(String baseUri, ODataBackend backend ) {
 		this.baseUri = baseUri;
 		this.backend = backend;
 	}

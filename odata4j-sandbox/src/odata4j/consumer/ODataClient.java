@@ -1,4 +1,4 @@
-package odata4j.sandbox;
+package odata4j.consumer;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -25,7 +25,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-public class OdataClient {
+public class ODataClient {
 
 	public static class CollectionInfo {
 		public String url;
@@ -111,14 +111,14 @@ public class OdataClient {
 	private final boolean dumpResponseHeaders;
 	private final boolean dumpResponseBody;
 	
-	public OdataClient() {
+	public ODataClient() {
 		this(false);
 	}
-	public OdataClient(boolean dump) {
+	public ODataClient(boolean dump) {
 		this(null,dump);
 	}
 
-	public OdataClient(Map<String,String> headers, boolean dump) {
+	public ODataClient(Map<String,String> headers, boolean dump) {
 		this.headers = headers==null?new HashMap<String,String>():Collections.unmodifiableMap(headers);
 		this.dumpResponseBody = dump;
 		this.dumpResponseHeaders = dump;
@@ -127,7 +127,7 @@ public class OdataClient {
 	
 	
 	
-	public Iterable<CollectionInfo> getCollections(OdataClientRequest request) {
+	public Iterable<CollectionInfo> getCollections(ODataClientRequest request) {
 
 		try {
 			XMLEventReader reader = doXmlRequest(request);
@@ -139,7 +139,7 @@ public class OdataClient {
 
 	
 	
-	public AtomEntry getEntity(OdataClientRequest request){
+	public AtomEntry getEntity(ODataClientRequest request){
 		try {
 		
 			XMLEventReader reader = doXmlRequest(request);
@@ -152,7 +152,7 @@ public class OdataClient {
 	
 	
 	
-	public Iterable<AtomEntry> getEntities(OdataClientRequest request){
+	public Iterable<AtomEntry> getEntities(ODataClientRequest request){
 		
 		try {
 			XMLEventReader reader = doXmlRequest(request);
@@ -164,7 +164,7 @@ public class OdataClient {
 	}
 	
 	
-	private XMLEventReader doXmlRequest(OdataClientRequest request) throws Exception {
+	private XMLEventReader doXmlRequest(ODataClientRequest request) throws Exception {
 		Client client = Client.create();
 		WebResource webResource = client.resource(request.getUrl());
 			

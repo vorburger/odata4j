@@ -3,8 +3,10 @@ package odata4j.sandbox;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import odata4j.sandbox.OdataClient.AtomEntry;
-import odata4j.sandbox.OdataClient.CollectionInfo;
+import odata4j.consumer.ODataClient;
+import odata4j.consumer.ODataClientRequest;
+import odata4j.consumer.ODataClient.AtomEntry;
+import odata4j.consumer.ODataClient.CollectionInfo;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
@@ -36,7 +38,7 @@ public class Sandbox {
 		 
 		 String[] dallas = System.getenv("DALLAS").split(":");
 		 
-		 OdataClientRequest request = OdataClientRequest.create(url)
+		 ODataClientRequest request = ODataClientRequest.create(url)
 		 	.header("$uniqueUserID", dallas[0])
 		 	.header("$accountKey",dallas[1])
 		 	.header("DataServiceVersion", "2.0");
@@ -54,9 +56,9 @@ public class Sandbox {
 		 // visitmix
 		 // http://api.visitmix.com/OData.svc/
 		 url = "http://api.visitmix.com/OData.svc/";
-		 request = OdataClientRequest.create(url);
+		 request = ODataClientRequest.create(url);
 		 
-		 OdataClient client = new OdataClient(true);
+		 ODataClient client = new ODataClient(true);
 		 
 		 //client.insertEntity()
 		 
@@ -79,7 +81,7 @@ public class Sandbox {
 	}
 	
 	
-	private static OdataClientRequest azureTableRequest(String method, String path, String queryParams, String contentType, String requestBody) throws Exception {
+	private static ODataClientRequest azureTableRequest(String method, String path, String queryParams, String contentType, String requestBody) throws Exception {
 		
 		 String[] azureStorage = System.getenv("AZURESTORAGE").split(":");
 		 String account = azureStorage[0];
@@ -88,7 +90,7 @@ public class Sandbox {
 		 String url= "http://"+account+".table.core.windows.net/" + path;
 		 if (!StringUtils.isBlank(queryParams))
 			 url = url + "?" + queryParams;
-		 OdataClientRequest rt = OdataClientRequest.create(url);
+		 ODataClientRequest rt = ODataClientRequest.create(url);
 		
 		 
 		 String date = new DateTime(DateTimeZone.UTC).toString("EEE, dd MMM yyyy HH:mm:ss zzz").replace("UTC", "GMT");
@@ -130,11 +132,11 @@ public class Sandbox {
 		return Base64.decodeBase64(value);
 	}
 	
-	private static void dumpCollections(OdataClient client, String url){
-		 for(CollectionInfo si : client.getCollections(OdataClientRequest.create(url))){
+	private static void dumpCollections(ODataClient client, String url){
+		 for(CollectionInfo si : client.getCollections(ODataClientRequest.create(url))){
 			 log(si.toString());
 			 if ("application/atomsvc+xml".equals(  si.accept))
-				for(CollectionInfo sii : client.getCollections(OdataClientRequest.create(si.url))) {
+				for(CollectionInfo sii : client.getCollections(ODataClientRequest.create(si.url))) {
 					 log("  " + sii);
 				
 			}
