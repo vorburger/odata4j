@@ -138,24 +138,24 @@ public class AtomFeedWriter extends BaseWriter {
 			String sValue = null;
 			
 			if (type == EdmType.INT32){
-				writer.writeAttribute(new QName(m,"type","m"), type.getTypeString());
+				writer.writeAttribute(new QName(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
 			} else if (type == EdmType.INT16){
-				writer.writeAttribute(new QName(m,"type","m"), type.getTypeString());
+				writer.writeAttribute(new QName(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
 			}else if (type == EdmType.BOOLEAN){
-				writer.writeAttribute(new QName(m,"type","m"), type.getTypeString());
+				writer.writeAttribute(new QName(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
 			}else if (type == EdmType.DECIMAL){
-				writer.writeAttribute(new QName(m,"type","m"), type.getTypeString());
+				writer.writeAttribute(new QName(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
 			} else if (type == EdmType.STRING){
 				if (value != null) sValue = value.toString();
 			}else if (type == EdmType.DATETIME){
-				writer.writeAttribute(new QName(m,"type","m"), type.getTypeString());
+				writer.writeAttribute(new QName(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = toString(new DateTime(value));
 			}  else if (type == EdmType.BINARY){
-				writer.writeAttribute(new QName(m,"type","m"), type.getTypeString());
+				writer.writeAttribute(new QName(m,"type","m"), type.toTypeString());
 				byte[] bValue = (byte[]) value;
 				if (value != null) sValue = Base64.encodeBase64String(bValue);
 			} else {

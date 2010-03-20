@@ -54,7 +54,7 @@ public class EdmxWriter extends BaseWriter {
 					writer.startElement(new QName("Property"));
 					
 					writer.writeAttribute("Name", prop.name);
-					writer.writeAttribute("Type", prop.type.getTypeString());
+					writer.writeAttribute("Type", prop.type.toTypeString());
 					writer.writeAttribute("Nullable", Boolean.toString(prop.nullable));
 					if(prop.maxLength != null)
 						writer.writeAttribute("MaxLength", Integer.toString(prop.maxLength));

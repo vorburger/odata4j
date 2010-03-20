@@ -25,7 +25,7 @@ public enum EdmType {
 		this.typeString = typeString;
 	}
 	
-	public String getTypeString(){
+	public String toTypeString(){
 		return typeString;
 	}
 	

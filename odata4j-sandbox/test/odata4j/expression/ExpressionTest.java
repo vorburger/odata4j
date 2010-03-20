@@ -1,7 +1,16 @@
 package odata4j.expression;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
 import junit.framework.Assert;
 
+import odata4j.edm.EdmType;
+
+import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
 import org.junit.Test;
 
 public class ExpressionTest {
@@ -10,6 +19,8 @@ public class ExpressionTest {
 	public void testExpressionParsing(){
 		
 		t(Expression.null_(),"null");
+		t(Expression.boolean_(true),"true");
+		t(Expression.boolean_(false),"false");
 		
 		t(Expression.string(""),"''");
 		t(Expression.string(""),"  ''    ");
@@ -18,8 +29,26 @@ public class ExpressionTest {
 		t(Expression.string(" foo "),"' foo '");
 		t(Expression.string("fo'o"),"'fo''o'");
 		
+		t(Expression.integral(0),"0");
 		t(Expression.integral(2),"2");
+		t(Expression.integral(-2),"-2");
 		t(Expression.integral(222222222),"222222222");
+		t(Expression.integral(-222222222),"-222222222");
+		t(Expression.int64(-2),"-2L");
+		t(Expression.single(-2f),"-2f");
+		t(Expression.single(-2.34f),"-2.34f");
+		t(Expression.double_(-2.34d),"-2.34");
+		t(Expression.double_(-2E+1),"-2E+1");
+		t(Expression.double_(2E-1),"2E-1");
+		t(Expression.double_(-2.1E+1),"-2.1E+1");
+		t(Expression.double_(-2.1E-1),"-2.1E-1");
+		t(Expression.dateTime(new LocalDateTime("2008-10-13")),"datetime'2008-10-13T00:00:00'");
+		t(Expression.dateTimeOffset(new DateTime("2008-10-13T00:00:00-04:00")),"datetimeoffset'2008-10-13T00:00:00-04:00'");
+		t(Expression.time(new LocalTime("13:20:00")),"time'13:20:00'");
+		t(Expression.guid(UUID.fromString("12345678-aa-aa-bbbb-ccccddddffff")),"guid'12345678-aaaa-bbbb-ccccddddffff'");
+		t(Expression.decimal(new BigDecimal("2.345")),"decimal'2.345'");
+		t(Expression.binary(new byte[]{(byte)0xff}),"X'FF'");
+		t(Expression.binary(new byte[]{(byte)0x00,(byte)0xaa,(byte)0xff}),"binary'00aaff'");
 		
 		t(Expression.simpleProperty("LastName"),"LastName");
 		t(Expression.simpleProperty("LastName2"),"   LastName2  ");
@@ -30,7 +59,7 @@ public class ExpressionTest {
 		
 		t(Expression.ne(Expression.simpleProperty("LastName"), Expression.string("foo")),"LastName ne 'foo'");
 		
-		CommonExpression exp = Expression.eq(Expression.simpleProperty("a"), Expression.integral(1));
+		EqExpression exp = Expression.eq(Expression.simpleProperty("a"), Expression.integral(1));
 		t(Expression.and(exp,exp),"a eq 1 and a eq 1");
 		t(Expression.or(exp,exp),"a eq 1 or a eq 1");
 		t(Expression.or(exp,Expression.and(exp,exp)),"a eq 1 or a eq 1 and a eq 1");
@@ -47,16 +76,77 @@ public class ExpressionTest {
 		t(Expression.div(Expression.integral(1), Expression.integral(2)),"1 div 2");
 		t(Expression.mod(Expression.integral(1), Expression.integral(2)),"1 mod 2");
 		
+		
+		t(Expression.paren(Expression.null_()),"(null)");
+		t(Expression.paren(Expression.null_())," (  null )  ");
+		t(Expression.paren(Expression.paren(Expression.null_())),"((null))");
+		t(Expression.add(Expression.paren(Expression.integral(1)), Expression.paren(Expression.integral(2))),"(1) add (2)");
+		
+		t(Expression.not(Expression.null_()),"not null");
+		t(Expression.negate(Expression.simpleProperty("a")),"-a");
+		t(Expression.negate(Expression.simpleProperty("a")),"- a");
+		t(Expression.cast(EdmType.STRING.toTypeString()),"cast('Edm.String')");
+		t(Expression.cast(EdmType.STRING.toTypeString()),"cast    ( 'Edm.String'  ) ");
+		t(Expression.cast(Expression.null_(),EdmType.STRING.toTypeString()),"cast(null,'Edm.String')");
+		t(Expression.cast(Expression.null_(),EdmType.STRING.toTypeString()),"    cast   (  null  ,  'Edm.String'   ) ");
+		t(Expression.isof(EdmType.STRING.toTypeString()),"isof('Edm.String')");
+		
+		t(Expression.endsWith(Expression.string("aba"),Expression.string("a")),"endswith('aba','a')");
+		t(Expression.startsWith(Expression.string("aba"),Expression.string("a")),"startswith('aba','a')");
+		t(Expression.substringOf(Expression.string("aba"),Expression.string("a")),"substringof('aba','a')");
+		t(Expression.substringOf(Expression.string("aba")),"substringof('aba')");
+		t(Expression.indexOf(Expression.string("aba"),Expression.string("a")),"indexof('aba','a')");
+		t(Expression.replace(Expression.string("aba"),Expression.string("a"),Expression.string("b")),"replace('aba','a','b')");
+		t(Expression.toLower(Expression.string("aba")),"tolower('aba')");
+		t(Expression.toUpper(Expression.string("aba")),"toupper('aba')");
+		t(Expression.trim(Expression.string("aba")),"trim('aba')");
+		t(Expression.substring(Expression.string("aba"),Expression.integral(1)),"substring('aba',1)");
+		t(Expression.substring(Expression.string("aba"),Expression.integral(1),Expression.integral(2)),"substring('aba',1,2)");
+		t(Expression.concat(Expression.string("a"),Expression.string("b")),"concat('a','b')");
+		t(Expression.length(Expression.string("aba")),"length('aba')");
+		
+		t(Expression.year(Expression.string("aba")),"year('aba')");
+		t(Expression.month(Expression.string("aba")),"month('aba')");
+		t(Expression.day(Expression.string("aba")),"day('aba')");
+		t(Expression.hour(Expression.string("aba")),"hour('aba')");
+		t(Expression.minute(Expression.string("aba")),"minute('aba')");
+		t(Expression.second(Expression.string("aba")),"second('aba')");
+		t(Expression.round(Expression.string("aba")),"round('aba')");
+		t(Expression.ceiling(Expression.string("aba")),"ceiling('aba')");
+		t(Expression.floor(Expression.string("aba")),"floor('aba')");
+		
+		o("a desc",Expression.orderBy(Expression.simpleProperty("a"), false));
+		o("a",Expression.orderBy(Expression.simpleProperty("a"), true));
+		o("b desc, a",Expression.orderBy(Expression.simpleProperty("b"), false),Expression.orderBy(Expression.simpleProperty("a"), true));
 	}
 	
 	
-	
-	private void t(CommonExpression expected, String urlEncoded){
-		CommonExpression actual = ExpressionParser.parse(urlEncoded);
+	private void o(String value, OrderByExpression... expecteds){
+		List<OrderByExpression> actuals = ExpressionParser.parseOrderBy(value);
+		Assert.assertEquals(expecteds.length, actuals.size());
+		for(int i =0;i<expecteds.length;i++){
+			OrderByExpression expected = expecteds[i];
+			OrderByExpression actual = actuals.get(i);
+			
+			Assert.assertEquals(expected.isAscending(), actual.isAscending());
+			
+			assertSame(expected.getExpression(),actual.getExpression());
+			
+		}
+		
+	}
+	private void t(CommonExpression expected, String value){
+		CommonExpression actual = ExpressionParser.parse(value);
 		assertSame(expected,actual);
 		
 	}
 	private void assertSame(CommonExpression expected, CommonExpression actual ){
+		if (expected==null){
+			Assert.assertNull(actual);
+			return;
+		} else {
+			Assert.assertNotNull(actual);
+		}
 		
 		if (expected instanceof EqExpression){
 			assertInstanceOf(EqExpression.class,actual);
@@ -128,6 +218,47 @@ public class ExpressionTest {
 			assertInstanceOf(IntegralLiteral.class,actual);
 			Assert.assertEquals(((IntegralLiteral)actual).getValue(), ((IntegralLiteral)expected).getValue());
 		}
+		else if (expected instanceof Int64Literal){
+			assertInstanceOf(Int64Literal.class,actual);
+			Assert.assertEquals(((Int64Literal)actual).getValue(), ((Int64Literal)expected).getValue());
+		}
+		else if (expected instanceof DateTimeLiteral){
+			assertInstanceOf(DateTimeLiteral.class,actual);
+			Assert.assertEquals(((DateTimeLiteral)actual).getValue(), ((DateTimeLiteral)expected).getValue());
+		}
+		else if (expected instanceof DateTimeOffsetLiteral){
+			assertInstanceOf(DateTimeOffsetLiteral.class,actual);
+			Assert.assertEquals(((DateTimeOffsetLiteral)actual).getValue(), ((DateTimeOffsetLiteral)expected).getValue());
+		}
+		else if (expected instanceof TimeLiteral){
+			assertInstanceOf(TimeLiteral.class,actual);
+			Assert.assertEquals(((TimeLiteral)actual).getValue(), ((TimeLiteral)expected).getValue());
+		}
+		else if (expected instanceof BooleanLiteral){
+			assertInstanceOf(BooleanLiteral.class,actual);
+			Assert.assertEquals(((BooleanLiteral)actual).getValue(), ((BooleanLiteral)expected).getValue());
+		}
+		else if (expected instanceof BinaryLiteral){
+			assertInstanceOf(BinaryLiteral.class,actual);
+			assertArrayEqual(((BinaryLiteral)expected).getValue(),((BinaryLiteral)actual).getValue());
+		
+		}
+		else if (expected instanceof DecimalLiteral){
+			assertInstanceOf(DecimalLiteral.class,actual);
+			Assert.assertEquals(((DecimalLiteral)actual).getValue(), ((DecimalLiteral)expected).getValue());
+		}
+		else if (expected instanceof SingleLiteral){
+			assertInstanceOf(SingleLiteral.class,actual);
+			Assert.assertEquals(((SingleLiteral)actual).getValue(), ((SingleLiteral)expected).getValue());
+		}
+		else if (expected instanceof DoubleLiteral){
+			assertInstanceOf(DoubleLiteral.class,actual);
+			Assert.assertEquals(((DoubleLiteral)actual).getValue(), ((DoubleLiteral)expected).getValue());
+		}
+		else if (expected instanceof GuidLiteral){
+			assertInstanceOf(GuidLiteral.class,actual);
+			Assert.assertEquals(((GuidLiteral)actual).getValue(), ((GuidLiteral)expected).getValue());
+		}
 		else if (expected instanceof EntitySimpleProperty){
 			assertInstanceOf(EntitySimpleProperty.class,actual);
 			Assert.assertEquals(((EntitySimpleProperty)actual).getPropertyName(), ((EntitySimpleProperty)expected).getPropertyName());
@@ -135,8 +266,126 @@ public class ExpressionTest {
 		else if (expected instanceof NullLiteral){
 			assertInstanceOf(NullLiteral.class,actual);
 		}
+		else if (expected instanceof ParenExpression){
+			assertInstanceOf(ParenExpression.class,actual);
+			assertSame(((ParenExpression)actual).getExpression(),((ParenExpression)expected).getExpression());
+		}
+		else if (expected instanceof NotExpression){
+			assertInstanceOf(NotExpression.class,actual);
+			assertSame(((NotExpression)actual).getExpression(),((NotExpression)expected).getExpression());
+		}
+		else if (expected instanceof NegateExpression){
+			assertInstanceOf(NegateExpression.class,actual);
+			assertSame(((NegateExpression)actual).getExpression(),((NegateExpression)expected).getExpression());
+		}
+		else if (expected instanceof CastExpression){
+			assertInstanceOf(CastExpression.class,actual);
+			assertSame(((CastExpression)actual).getExpression(),((CastExpression)expected).getExpression());
+			Assert.assertEquals(((CastExpression)actual).getType(),((CastExpression)expected).getType());
+		}
+		else if (expected instanceof IsofExpression){
+			assertInstanceOf(IsofExpression.class,actual);
+			assertSame(((IsofExpression)actual).getExpression(),((IsofExpression)expected).getExpression());
+			Assert.assertEquals(((IsofExpression)actual).getType(),((IsofExpression)expected).getType());
+		}
+		else if (expected instanceof EndsWithMethodCallExpression){
+			assertInstanceOf(EndsWithMethodCallExpression.class,actual);
+			assertSame(((EndsWithMethodCallExpression)actual).getTarget(),((EndsWithMethodCallExpression)expected).getTarget());
+			assertSame(((EndsWithMethodCallExpression)actual).getValue(),((EndsWithMethodCallExpression)expected).getValue());
+		}
+		else if (expected instanceof StartsWithMethodCallExpression){
+			assertInstanceOf(StartsWithMethodCallExpression.class,actual);
+			assertSame(((StartsWithMethodCallExpression)actual).getTarget(),((StartsWithMethodCallExpression)expected).getTarget());
+			assertSame(((StartsWithMethodCallExpression)actual).getValue(),((StartsWithMethodCallExpression)expected).getValue());
+		}
+		else if (expected instanceof SubstringOfMethodCallExpression){
+			assertInstanceOf(SubstringOfMethodCallExpression.class,actual);
+			assertSame(((SubstringOfMethodCallExpression)actual).getTarget(),((SubstringOfMethodCallExpression)expected).getTarget());
+			assertSame(((SubstringOfMethodCallExpression)actual).getValue(),((SubstringOfMethodCallExpression)expected).getValue());
+		}
+		else if (expected instanceof IndexOfMethodCallExpression){
+			assertInstanceOf(IndexOfMethodCallExpression.class,actual);
+			assertSame(((IndexOfMethodCallExpression)actual).getTarget(),((IndexOfMethodCallExpression)expected).getTarget());
+			assertSame(((IndexOfMethodCallExpression)actual).getValue(),((IndexOfMethodCallExpression)expected).getValue());
+		}
+		else if (expected instanceof ReplaceMethodCallExpression){
+			assertInstanceOf(ReplaceMethodCallExpression.class,actual);
+			assertSame(((ReplaceMethodCallExpression)actual).getTarget(),((ReplaceMethodCallExpression)expected).getTarget());
+			assertSame(((ReplaceMethodCallExpression)actual).getFind(),((ReplaceMethodCallExpression)expected).getFind());
+			assertSame(((ReplaceMethodCallExpression)actual).getReplace(),((ReplaceMethodCallExpression)expected).getReplace());
+		}
+		else if (expected instanceof ToLowerMethodCallExpression){
+			assertInstanceOf(ToLowerMethodCallExpression.class,actual);
+			assertSame(((ToLowerMethodCallExpression)actual).getTarget(),((ToLowerMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof ToUpperMethodCallExpression){
+			assertInstanceOf(ToUpperMethodCallExpression.class,actual);
+			assertSame(((ToUpperMethodCallExpression)actual).getTarget(),((ToUpperMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof TrimMethodCallExpression){
+			assertInstanceOf(TrimMethodCallExpression.class,actual);
+			assertSame(((TrimMethodCallExpression)actual).getTarget(),((TrimMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof SubstringMethodCallExpression){
+			assertInstanceOf(SubstringMethodCallExpression.class,actual);
+			assertSame(((SubstringMethodCallExpression)actual).getTarget(),((SubstringMethodCallExpression)expected).getTarget());
+			assertSame(((SubstringMethodCallExpression)actual).getStart(),((SubstringMethodCallExpression)expected).getStart());
+			assertSame(((SubstringMethodCallExpression)actual).getLength(),((SubstringMethodCallExpression)expected).getLength());
+		}
+		else if (expected instanceof ConcatMethodCallExpression){
+			assertInstanceOf(ConcatMethodCallExpression.class,actual);
+			assertSame(((ConcatMethodCallExpression)actual).getLHS(),((ConcatMethodCallExpression)expected).getLHS());
+			assertSame(((ConcatMethodCallExpression)actual).getRHS(),((ConcatMethodCallExpression)expected).getRHS());
+		}
+		else if (expected instanceof LengthMethodCallExpression){
+			assertInstanceOf(LengthMethodCallExpression.class,actual);
+			assertSame(((LengthMethodCallExpression)actual).getTarget(),((LengthMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof YearMethodCallExpression){
+			assertInstanceOf(YearMethodCallExpression.class,actual);
+			assertSame(((YearMethodCallExpression)actual).getTarget(),((YearMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof MonthMethodCallExpression){
+			assertInstanceOf(MonthMethodCallExpression.class,actual);
+			assertSame(((MonthMethodCallExpression)actual).getTarget(),((MonthMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof DayMethodCallExpression){
+			assertInstanceOf(DayMethodCallExpression.class,actual);
+			assertSame(((DayMethodCallExpression)actual).getTarget(),((DayMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof HourMethodCallExpression){
+			assertInstanceOf(HourMethodCallExpression.class,actual);
+			assertSame(((HourMethodCallExpression)actual).getTarget(),((HourMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof MinuteMethodCallExpression){
+			assertInstanceOf(MinuteMethodCallExpression.class,actual);
+			assertSame(((MinuteMethodCallExpression)actual).getTarget(),((MinuteMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof SecondMethodCallExpression){
+			assertInstanceOf(SecondMethodCallExpression.class,actual);
+			assertSame(((SecondMethodCallExpression)actual).getTarget(),((SecondMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof RoundMethodCallExpression){
+			assertInstanceOf(RoundMethodCallExpression.class,actual);
+			assertSame(((RoundMethodCallExpression)actual).getTarget(),((RoundMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof FloorMethodCallExpression){
+			assertInstanceOf(FloorMethodCallExpression.class,actual);
+			assertSame(((FloorMethodCallExpression)actual).getTarget(),((FloorMethodCallExpression)expected).getTarget());
+		}
+		else if (expected instanceof CeilingMethodCallExpression){
+			assertInstanceOf(CeilingMethodCallExpression.class,actual);
+			assertSame(((CeilingMethodCallExpression)actual).getTarget(),((CeilingMethodCallExpression)expected).getTarget());
+		}
 		else {
 			Assert.fail("Unsupported: " + expected);
+		}
+	}
+	
+	private <T> void assertArrayEqual(byte[] expected, byte[] actual){
+		Assert.assertEquals(expected.length, actual.length);
+		for(int i=0;i<expected.length;i++){
+			Assert.assertEquals(expected[i],actual[i]);
 		}
 	}
 	

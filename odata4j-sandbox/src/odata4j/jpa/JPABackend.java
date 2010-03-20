@@ -24,7 +24,6 @@ import odata4j.backend.ODataBackend;
 import odata4j.backend.OEntity;
 import odata4j.backend.OProperty;
 import odata4j.backend.QueryInfo;
-import odata4j.backend.QueryInfo.OrderBy;
 import odata4j.edm.EdmDataServices;
 import odata4j.edm.EdmEntityContainer;
 import odata4j.edm.EdmEntitySet;
@@ -267,15 +266,15 @@ public class JPABackend implements ODataBackend {
 		Root<?> root = cq.from(em.getMetamodel().entity(clazz));
 		cq = cq.select(root);
 		
-		if (query.orderBy != null){
-			for(OrderBy orderBy : query.orderBy){
-				if (orderBy.ascending)
-					cq =  cq.orderBy(cb.asc(root.get(orderBy.field)));
-				else
-					cq =  cq.orderBy(cb.desc(root.get(orderBy.field)));
-			}
-			
-		}
+//		if (query.orderBy != null){
+//			for(OrderBy orderBy : query.orderBy){
+//				if (orderBy.ascending)
+//					cq =  cq.orderBy(cb.asc(root.get(orderBy.field)));
+//				else
+//					cq =  cq.orderBy(cb.desc(root.get(orderBy.field)));
+//			}
+//			
+//		}
 		
 		
 		TypedQuery<Object> tq = em.createQuery(cq);

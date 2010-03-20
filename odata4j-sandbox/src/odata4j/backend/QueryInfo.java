@@ -2,23 +2,20 @@ package odata4j.backend;
 
 import java.util.List;
 
+import odata4j.expression.BoolCommonExpression;
+import odata4j.expression.OrderByExpression;
+
 public class QueryInfo {
 
-	public static class OrderBy{
-		public final String field;
-		public final boolean ascending;
-		public OrderBy(String field, boolean ascending){
-			this.field = field;
-			this.ascending = ascending;
-		}
-	}
 	public final Integer top;
 	public final Integer skip;
-	public final List<OrderBy> orderBy;
+	public final BoolCommonExpression filter;
+	public final List<OrderByExpression> orderBy;
 	
-	public QueryInfo(Integer top, Integer skip, List<OrderBy> orderBy){
+	public QueryInfo(Integer top, Integer skip, BoolCommonExpression filter, List<OrderByExpression> orderBy){
 		this.top = top;
 		this.skip = skip;
+		this.filter = filter;
 		this.orderBy = orderBy;
 	}
 	

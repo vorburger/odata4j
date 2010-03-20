@@ -15,7 +15,10 @@ import javax.ws.rs.core.Response;
 import odata4j.backend.EntitiesRequest;
 import odata4j.backend.EntitiesResponse;
 import odata4j.backend.QueryInfo;
-import odata4j.backend.QueryInfo.OrderBy;
+import odata4j.expression.BoolCommonExpression;
+import odata4j.expression.CommonExpression;
+import odata4j.expression.ExpressionParser;
+import odata4j.expression.OrderByExpression;
 import odata4j.service.ODataService;
 import odata4j.xml.AtomFeedWriter;
 
@@ -30,11 +33,12 @@ public class EntitiesRequestResource {
 			final @PathParam("entityName") String entityName, 
 			@QueryParam("$top") String top, 
 			@QueryParam("$skip") String skip,
+			@QueryParam("$filter") String filter,
 			@QueryParam("$orderby") String orderBy){
-		log.info(String.format("getEntities(%s,%s,%s,%s)",entityName,top,skip,orderBy));
+		log.info(String.format("getEntities(%s,%s,%s,%s,%s)",entityName,top,skip,filter,orderBy));
 		
 		
-		final QueryInfo finalQuery = new QueryInfo(parseTop(top),parseSkip(skip),parseOrderBy(orderBy));
+		final QueryInfo finalQuery = new QueryInfo(parseTop(top),parseSkip(skip),parseFilter(filter),parseOrderBy(orderBy));
 		
 		
 		ODataService service = ODataService.getInstance();
@@ -61,23 +65,18 @@ public class EntitiesRequestResource {
 	private Integer parseSkip(String skip){
 		return skip==null?null:Integer.parseInt(skip);
 	}
-	private List<OrderBy> parseOrderBy(String orderBy){
-		List<OrderBy> rt = new ArrayList<OrderBy>();
+	private BoolCommonExpression parseFilter(String filter){
+		if (filter==null)
+			return null;
+		CommonExpression ce = ExpressionParser.parse(filter);
+		if (!(ce instanceof BoolCommonExpression))
+			throw new RuntimeException("Bad filter");
+		return (BoolCommonExpression)ce;
+	}
+	private List<OrderByExpression> parseOrderBy(String orderBy){
 		if (orderBy==null)
-			return rt;
-		for(String token : orderBy.split(",")){
-			token = token.trim();
-			boolean isAscending = true;
-			if (token.toLowerCase().endsWith(" asc"))
-				token = token.substring(0,token.length()-4);
-			if (token.toLowerCase().endsWith(" desc")) {
-				isAscending = false;
-				token = token.substring(0,token.length()-5);
-			}
-			rt.add(new OrderBy(token,isAscending));
-			
-		}
-		return rt;
+			return null;
+		return ExpressionParser.parseOrderBy(orderBy);
 	}
 
 }
