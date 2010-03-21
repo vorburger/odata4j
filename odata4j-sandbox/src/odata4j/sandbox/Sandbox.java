@@ -36,6 +36,8 @@ public class Sandbox {
 		// url = "https://api.sqlazureservices.com/APService.svc/Search?SearchTerms=chile";
 		 url = "https://api.sqlazureservices.com/APService.svc/Search?SearchTerms=chile&MediaSize=preview&$page=1&$itemsperpage=1&$format=atom10";
 		 
+		 // https://api.sqlazureservices.com/APService.svc/Categories?$format=atom10
+		 
 		 String[] dallas = System.getenv("DALLAS").split(":");
 		 
 		 ODataClientRequest request = ODataClientRequest.get(url)
@@ -58,7 +60,7 @@ public class Sandbox {
 		 url = "http://api.visitmix.com/OData.svc/";
 		 request = ODataClientRequest.get(url);
 		 
-		 ODataClient client = new ODataClient();
+		 ODataClient client = new ODataClient(null);
 		 
 		 //client.insertEntity()
 		 

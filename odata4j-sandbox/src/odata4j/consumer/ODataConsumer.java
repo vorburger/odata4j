@@ -6,6 +6,7 @@ import odata4j.core.OEntity;
 import odata4j.core.OEntityRef;
 import odata4j.core.OModify;
 import odata4j.core.OQuery;
+import odata4j.core.OClientBehavior;
 import core4j.Enumerable;
 import core4j.Func1;
 
@@ -14,12 +15,19 @@ public class ODataConsumer {
 	private final String serviceRootUri;
 	private final ODataClient client;
 	
-	public ODataConsumer(String serviceRootUri){
+	private ODataConsumer(String serviceRootUri, OClientBehavior... behaviors){
 		this.serviceRootUri = serviceRootUri;
-		this.client = new ODataClient();
+		this.client = new ODataClient(behaviors);
 	}
 	public String getServiceRootUri(){
 		return serviceRootUri;
+	}
+	
+	public static ODataConsumer create(String serviceRootUri){
+		return create(serviceRootUri,null);
+	}
+	public static ODataConsumer create(String serviceRootUri,OClientBehavior... behaviors){
+		return new ODataConsumer(serviceRootUri,behaviors);
 	}
 	
 	
@@ -39,7 +47,7 @@ public class ODataConsumer {
 
 
 	public OEntityRef<OEntity> getEntity(String entitySetName, Object... key) {
-		return new OEntityRefImpl(client,serviceRootUri,entitySetName,key);
+		return new OEntityRefImpl<OEntity>(false,client,serviceRootUri,entitySetName,key);
 	}
 
 
@@ -52,6 +60,9 @@ public class ODataConsumer {
 	}
 	public OModify<OEntity> mergeEntity(String entitySetName, Object... key) {
 		return new OModifyImpl<OEntity>(null,client,serviceRootUri,entitySetName, key);
+	}
+	public OEntityRef<Void> deleteEntity(String entitySetName, Object... key) {
+		return new OEntityRefImpl<Void>(true,client,serviceRootUri,entitySetName,key);
 	}
 	
 	

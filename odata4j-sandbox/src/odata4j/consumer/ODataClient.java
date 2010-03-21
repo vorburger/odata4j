@@ -18,8 +18,9 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import odata4j.core.OProperties;
+import odata4j.core.OData;
 import odata4j.core.OProperty;
+import odata4j.core.OClientBehavior;
 import odata4j.edm.EdmType;
 import odata4j.xml.AtomFeedWriter;
 
@@ -127,23 +128,20 @@ public class ODataClient {
 	
 	public static final QName XML_BASE = new QName(NS_XML,"base");
 	
-
-	private final Map<String,String> headers;
 	
 	public static boolean DUMP_REQUEST_HEADERS;
 	public static boolean DUMP_REQUEST_BODY;
 	public static boolean DUMP_RESPONSE_HEADERS;
 	public static boolean DUMP_RESPONSE_BODY;
 	
-	public ODataClient() {
-		this(null);
+	private final OClientBehavior[] behaviors;
+	
+	public ODataClient(OClientBehavior... behaviors) {
+		this.behaviors = behaviors;
 	}
 	
 
-	public ODataClient(Map<String,String> headers) {
-		this.headers = headers==null?new HashMap<String,String>():Collections.unmodifiableMap(headers);
-
-	}
+	
 	
 	
 	
@@ -203,8 +201,19 @@ public class ODataClient {
 		ClientResponse response = doRequest(request,204);
 		return true;
 	}
+	public boolean deleteEntity(ODataClientRequest request) {
+		ClientResponse response = doRequest(request,204);
+		return true;
+	}
 	
 	private ClientResponse doRequest(ODataClientRequest request, int expectedResponseStatus){ 
+		
+		if (behaviors != null) {
+			for(OClientBehavior behavior : behaviors)
+				request = behavior.transform(request);
+		}
+		
+		
 		Client client = Client.create();
 		WebResource webResource = client.resource(request.getUrl());
 		
@@ -218,9 +227,9 @@ public class ODataClient {
 		// set headers
 		b = b.accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML);
 		
-		for(String header : headers.keySet()){
-			b.header(header, headers.get(header));
-		}
+//		for(String header : headers.keySet()){
+//			b.header(header, headers.get(header));
+//		}
 		for(String header : request.getHeaders().keySet()){
 			b.header(header,request.getHeaders().get(header));
 		}
@@ -454,14 +463,14 @@ public class ODataClient {
 				boolean isComplexType = false;
 				if (typeAttribute!=null) {
 					type = typeAttribute.getValue();
-					EdmType et = EdmType.fromTypeString(type);
-					isComplexType  = et==null;
+					EdmType et = EdmType.get(type);
+					isComplexType  = !et.isPrimitive();
 				}
 				
 				if (isComplexType){
-					op = OProperties.complex(name, type,  isNull?null:Enumerable.create( parseProperties(reader,event.asStartElement())).toList());
+					op = OData.complex(name, type,  isNull?null:Enumerable.create( parseProperties(reader,event.asStartElement())).toList());
 				} else {
-					op = OProperties.parse(name,type, isNull?null:reader.getElementText());
+					op = OData.parseProperty(name,type, isNull?null:reader.getElementText());
 				}
 				rt.add(op);
 				
@@ -577,6 +586,9 @@ public class ODataClient {
 	private static void log(String message) {
 		System.out.println(message);
 	}
+
+
+	
 
 
 	

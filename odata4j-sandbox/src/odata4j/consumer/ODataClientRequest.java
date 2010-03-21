@@ -48,6 +48,10 @@ public class ODataClientRequest {
 	public static ODataClientRequest merge(String url, DataServicesAtomEntry entry) {
 		return new ODataClientRequest("MERGE",url,null,null,entry);
 	}
+	public static ODataClientRequest delete(String url) {
+		return new ODataClientRequest("DELETE",url,null,null,null);
+	}
+	
 	
 	public ODataClientRequest header(String name, String value) {
 		headers.put(name, value);
@@ -66,6 +70,7 @@ public class ODataClientRequest {
 	public ODataClientRequest entry(DataServicesAtomEntry entry) {
 		return new ODataClientRequest(method,url,headers,queryParams,entry);
 	}
+	
 	
 	
 	

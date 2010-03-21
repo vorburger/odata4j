@@ -12,4 +12,5 @@ public interface OQuery<T> {
 	public abstract OQuery<T> select(String select);
 	public abstract OQuery<T> nav(Object key, String navProperty);
 	public abstract OQuery<T> nav(Object[] key, String navProperty);
+	public abstract OQuery<T> custom(String name, String value);
 }

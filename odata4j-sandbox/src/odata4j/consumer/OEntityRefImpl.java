@@ -11,14 +11,16 @@ import odata4j.internal.EntitySegment;
 import odata4j.internal.InternalUtil;
 import core4j.Enumerable;
 
-public class OEntityRefImpl implements OEntityRef<OEntity>{
+public class OEntityRefImpl<T> implements OEntityRef<T>{
 
+	private final boolean isDelete;
 	private final ODataClient client;
 	private final String serviceRootUri;
 	private final List<EntitySegment> segments = new ArrayList<EntitySegment>();
 
 	
-	public OEntityRefImpl(ODataClient client, String serviceRootUri,String entitySetName,Object[] key){
+	public OEntityRefImpl(boolean isDelete, ODataClient client, String serviceRootUri,String entitySetName,Object[] key){
+		this.isDelete = isDelete;
 		this.client = client;
 		this.serviceRootUri = serviceRootUri;
 		
@@ -28,22 +30,30 @@ public class OEntityRefImpl implements OEntityRef<OEntity>{
 	}
 	
 	@Override
-	public OEntityRef<OEntity> nav(String navProperty, Object... key) {
+	public OEntityRef<T> nav(String navProperty, Object... key) {
 		segments.add(new EntitySegment(navProperty,key));
 		return this;
 	}
 	
 	@Override
-	public OEntity execute() {
+	public T execute() {
 		
 	    String path = Enumerable.create(segments).join("/");
 		
-		ODataClientRequest request = ODataClientRequest.get(serviceRootUri + path);
-		
-		AtomEntry entry = client.getEntity(request);
-		DataServicesAtomEntry dsae = (DataServicesAtomEntry)entry;
-		
-		return InternalUtil.toEntity(dsae);
+	    if (isDelete){
+	    	ODataClientRequest request = ODataClientRequest.delete(serviceRootUri + path);
+	    	boolean rt = client.deleteEntity(request);
+	    	return null;
+	    	
+	    } else {
+	    
+			ODataClientRequest request = ODataClientRequest.get(serviceRootUri + path);
+			
+			AtomEntry entry = client.getEntity(request);
+			DataServicesAtomEntry dsae = (DataServicesAtomEntry)entry;
+			
+			return (T) InternalUtil.toEntity(dsae);
+	    }
 	}
 	
 	

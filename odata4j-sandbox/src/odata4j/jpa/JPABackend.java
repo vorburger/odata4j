@@ -17,7 +17,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import odata4j.core.OEntity;
-import odata4j.core.OProperties;
+import odata4j.core.OData;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmDataServices;
 import odata4j.edm.EdmEntityContainer;
@@ -175,25 +175,25 @@ public class JPABackend implements ODataBackend {
 				Object value = field.get(jpaEntity);
 				if (ep.type == EdmType.STRING){
 					String sValue = (String)value;
-					rt.add(OProperties.string(ep.name,sValue));
+					rt.add(OData.stringProperty(ep.name,sValue));
 				} else if (ep.type == EdmType.INT32){
 					Integer iValue = (Integer)value;
-					rt.add(OProperties.int32(ep.name,iValue));
+					rt.add(OData.int32Property(ep.name,iValue));
 				}else if (ep.type == EdmType.BOOLEAN){
 					Boolean bValue = (Boolean)value;
-					rt.add(OProperties.boolean_(ep.name,bValue));
+					rt.add(OData.booleanProperty(ep.name,bValue));
 				}  else if (ep.type == EdmType.INT16){
 					Short sValue = (Short)value;
-					rt.add(OProperties.short_(ep.name,sValue));
+					rt.add(OData.shortProperty(ep.name,sValue));
 				}else if (ep.type == EdmType.DECIMAL){
 					BigDecimal dValue = (BigDecimal)value;
-					rt.add(OProperties.decimal(ep.name,dValue));
+					rt.add(OData.decimalProperty(ep.name,dValue));
 				}else if (ep.type == EdmType.DATETIME){
 					Date dValue = (Date)value;
-					rt.add(OProperties.datetime(ep.name,dValue));
+					rt.add(OData.datetimeProperty(ep.name,dValue));
 				}else if (ep.type == EdmType.BINARY){
 					byte[] bValue = (byte[])value;
-					rt.add(OProperties.binary(ep.name,bValue));
+					rt.add(OData.binaryProperty(ep.name,bValue));
 				} else {
 					throw new UnsupportedOperationException("Implement " + ep.type);
 				}

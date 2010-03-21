@@ -1,8 +1,10 @@
 package odata4j.consumer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import odata4j.consumer.ODataClient.AtomEntry;
 import odata4j.consumer.ODataClient.AtomFeed;
@@ -22,7 +24,7 @@ public class OQueryImpl<T> implements OQuery<T> {
 	private final Class<T> entityType;
 	private final String serviceRootUri;
 	private final List<EntitySegment> segments = new ArrayList<EntitySegment>();
-	
+	private final Map<String,String> customs = new HashMap<String,String>();
 	
 	private Integer top;
 	private Integer skip;
@@ -69,6 +71,12 @@ public class OQueryImpl<T> implements OQuery<T> {
 	}
 	
 	@Override
+	public OQuery<T> custom(String name, String value) {
+		customs.put(name, value);
+		return this;
+	}
+	
+	@Override
 	public OQuery<T> nav(Object key, String navProperty) {
 		return nav(new Object[]{key},navProperty);
 	}
@@ -105,6 +113,10 @@ public class OQueryImpl<T> implements OQuery<T> {
 		if (select != null){
 			request = request.queryParam("$select",select);
 		}
+		for(String name : customs.keySet()){
+			request = request.queryParam(name, customs.get(name));
+		}
+		
 		
 		Enumerable<AtomEntry> entries = getEntries(request);
 		
@@ -136,6 +148,7 @@ public class OQueryImpl<T> implements OQuery<T> {
 		private ODataClientRequest request;
 		private AtomFeed feed;
 		private Iterator<AtomEntry> feedEntries;
+		private int feedEntryCount;
 		
 		public AtomEntryIterator(ODataClientRequest request){
 			this.request = request;
@@ -146,16 +159,40 @@ public class OQueryImpl<T> implements OQuery<T> {
 			if (feed == null) {
 				feed = client.getEntities(request);
 				feedEntries = feed.entries.iterator();
+				feedEntryCount = 0;
 			}
 			
-			if (feedEntries.hasNext())
+			if (feedEntries.hasNext()) {
+				feedEntryCount++;
 				return IterationResult.next(feedEntries.next());
+			}
 			
-			if (feed.next == null)
-				return IterationResult.done();
 			
-			String skiptoken = feed.next.substring(feed.next.indexOf("$skiptoken=")+"$skiptoken=".length());
-			request = request.queryParam("$skiptoken", skiptoken);
+			// old-style paging: $page and $itemsPerPage
+			if (request.getQueryParams().containsKey("$page") && request.getQueryParams().containsKey("$itemsPerPage")){
+				
+				if (feedEntryCount==0)
+					return IterationResult.done();
+				
+				
+				int page = Integer.parseInt(request.getQueryParams().get("$page"));
+				int itemsPerPage = Integer.parseInt(request.getQueryParams().get("$itemsPerPage"));
+				
+				request = request.queryParam("$page", Integer.toString(page+1));
+				
+			} 
+			// new-style paging: $skiptoken
+			else {
+				
+				if (feed.next == null)
+					return IterationResult.done();
+			
+				String skiptoken = feed.next.substring(feed.next.indexOf("$skiptoken=")+"$skiptoken=".length());
+				request = request.queryParam("$skiptoken", skiptoken);
+			}
+			
+			
+			
 			feed = null;
 			
 			return advance();  // TODO stackoverflow possible here
