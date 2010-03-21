@@ -57,7 +57,7 @@ public class EntityRequestResource {
 		EntityResponse response = service.getBackend().getEntity(request);
 		
 		StringWriter sw = new StringWriter();
-		AtomFeedWriter.generateEntry(service.getBaseUri(),response,sw);
+		AtomFeedWriter.generateResponseEntry(service.getBaseUri(),response,sw);
 		String entity = sw.toString();
 		
 		return Response.ok(entity,ODataConstants.APPLICATION_ATOM_XML_CHARSET).header("DataServiceVersion","1.0").build();

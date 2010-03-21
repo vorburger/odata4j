@@ -17,6 +17,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import odata4j.core.OEntity;
+import odata4j.core.OProperties;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmDataServices;
 import odata4j.edm.EdmEntityContainer;
@@ -24,7 +25,6 @@ import odata4j.edm.EdmEntitySet;
 import odata4j.edm.EdmProperty;
 import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
-import odata4j.internal.PropertyImpl;
 import odata4j.producer.EntitiesRequest;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityRequest;
@@ -175,25 +175,25 @@ public class JPABackend implements ODataBackend {
 				Object value = field.get(jpaEntity);
 				if (ep.type == EdmType.STRING){
 					String sValue = (String)value;
-					rt.add(new PropertyImpl<String>(ep.name,ep.type,sValue));
+					rt.add(OProperties.string(ep.name,sValue));
 				} else if (ep.type == EdmType.INT32){
 					Integer iValue = (Integer)value;
-					rt.add(new PropertyImpl<Integer>(ep.name,ep.type,iValue));
+					rt.add(OProperties.int32(ep.name,iValue));
 				}else if (ep.type == EdmType.BOOLEAN){
 					Boolean bValue = (Boolean)value;
-					rt.add(new PropertyImpl<Boolean>(ep.name,ep.type,bValue));
+					rt.add(OProperties.boolean_(ep.name,bValue));
 				}  else if (ep.type == EdmType.INT16){
 					Short sValue = (Short)value;
-					rt.add(new PropertyImpl<Short>(ep.name,ep.type,sValue));
+					rt.add(OProperties.short_(ep.name,sValue));
 				}else if (ep.type == EdmType.DECIMAL){
 					BigDecimal dValue = (BigDecimal)value;
-					rt.add(new PropertyImpl<BigDecimal>(ep.name,ep.type,dValue));
+					rt.add(OProperties.decimal(ep.name,dValue));
 				}else if (ep.type == EdmType.DATETIME){
 					Date dValue = (Date)value;
-					rt.add(new PropertyImpl<Date>(ep.name,ep.type,dValue));
+					rt.add(OProperties.datetime(ep.name,dValue));
 				}else if (ep.type == EdmType.BINARY){
 					byte[] bValue = (byte[])value;
-					rt.add(new PropertyImpl<byte[]>(ep.name,ep.type,bValue));
+					rt.add(OProperties.binary(ep.name,bValue));
 				} else {
 					throw new UnsupportedOperationException("Implement " + ep.type);
 				}

@@ -38,7 +38,7 @@ public class Sandbox {
 		 
 		 String[] dallas = System.getenv("DALLAS").split(":");
 		 
-		 ODataClientRequest request = ODataClientRequest.create(url)
+		 ODataClientRequest request = ODataClientRequest.get(url)
 		 	.header("$uniqueUserID", dallas[0])
 		 	.header("$accountKey",dallas[1])
 		 	.header("DataServiceVersion", "2.0");
@@ -56,7 +56,7 @@ public class Sandbox {
 		 // visitmix
 		 // http://api.visitmix.com/OData.svc/
 		 url = "http://api.visitmix.com/OData.svc/";
-		 request = ODataClientRequest.create(url);
+		 request = ODataClientRequest.get(url);
 		 
 		 ODataClient client = new ODataClient();
 		 
@@ -90,7 +90,7 @@ public class Sandbox {
 		 String url= "http://"+account+".table.core.windows.net/" + path;
 		 if (!StringUtils.isBlank(queryParams))
 			 url = url + "?" + queryParams;
-		 ODataClientRequest rt = ODataClientRequest.create(url);
+		 ODataClientRequest rt = ODataClientRequest.get(url);
 		
 		 
 		 String date = new DateTime(DateTimeZone.UTC).toString("EEE, dd MMM yyyy HH:mm:ss zzz").replace("UTC", "GMT");
@@ -133,10 +133,10 @@ public class Sandbox {
 	}
 	
 	private static void dumpCollections(ODataClient client, String url){
-		 for(CollectionInfo si : client.getCollections(ODataClientRequest.create(url))){
+		 for(CollectionInfo si : client.getCollections(ODataClientRequest.get(url))){
 			 log(si.toString());
 			 if ("application/atomsvc+xml".equals(  si.accept))
-				for(CollectionInfo sii : client.getCollections(ODataClientRequest.create(si.url))) {
+				for(CollectionInfo sii : client.getCollections(ODataClientRequest.get(si.url))) {
 					 log("  " + sii);
 				
 			}

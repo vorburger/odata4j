@@ -1,36 +1,41 @@
 package odata4j.consumer;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import odata4j.consumer.ODataClient.AtomEntry;
 import odata4j.consumer.ODataClient.AtomFeed;
 import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
 import odata4j.core.OQuery;
+import odata4j.internal.EntitySegment;
 import odata4j.internal.InternalUtil;
 import core4j.Enumerable;
 import core4j.Func;
 import core4j.Func1;
-import core4j.ReadonlyIterator;
+import core4j.ReadOnlyIterator;
 
 public class OQueryImpl<T> implements OQuery<T> {
 
 	private final ODataClient client;
 	private final Class<T> entityType;
 	private final String serviceRootUri;
-	private final String entitySetName;
+	private final List<EntitySegment> segments = new ArrayList<EntitySegment>();
+	
 	
 	private Integer top;
 	private Integer skip;
 	private String orderBy;
 	private String filter;
 	private String select;
+	private String lastSegment;
 	
 	public OQueryImpl(ODataClient client, Class<T> entityType, String serviceRootUri, String entitySetName){
 		this.client = client;
 		this.entityType = entityType;
 		this.serviceRootUri = serviceRootUri;
-		this.entitySetName = entitySetName;
+		this.lastSegment = entitySetName;
 	}
 	
 	@Override
@@ -64,10 +69,26 @@ public class OQueryImpl<T> implements OQuery<T> {
 	}
 	
 	@Override
-	public Enumerable<T> get() {
-		
+	public OQuery<T> nav(Object key, String navProperty) {
+		return nav(new Object[]{key},navProperty);
+	}
 	
-		ODataClientRequest request = ODataClientRequest.create(serviceRootUri + entitySetName);
+	
+	
+	@Override
+	public OQuery<T> nav(Object[] key, String navProperty) {
+		segments.add(new EntitySegment(lastSegment,key));
+		lastSegment = navProperty;
+		return this;
+	}
+	
+	@Override
+	public Enumerable<T> execute() {
+		
+		String path = Enumerable.create(segments).join("/");
+		path += (path.length()==0?"":"/") + lastSegment;
+	
+		ODataClientRequest request = ODataClientRequest.get(serviceRootUri + path);
 		
 		if (top != null){
 			request = request.queryParam("$top",Integer.toString(top));
@@ -110,7 +131,7 @@ public class OQueryImpl<T> implements OQuery<T> {
 		
 	}
 	
-	private class AtomEntryIterator extends ReadonlyIterator<AtomEntry> {
+	private class AtomEntryIterator extends ReadOnlyIterator<AtomEntry> {
 
 		private ODataClientRequest request;
 		private AtomFeed feed;

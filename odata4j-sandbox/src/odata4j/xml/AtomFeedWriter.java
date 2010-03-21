@@ -1,10 +1,12 @@
 package odata4j.xml;
 
 import java.io.Writer;
+import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 import javax.xml.namespace.QName;
 
+import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmEntitySet;
@@ -19,7 +21,7 @@ import org.joda.time.DateTimeZone;
 
 public class AtomFeedWriter extends BaseWriter {
 
-	public static void generateEntry(String baseUri, EntityResponse response, Writer w){
+	public static void generateResponseEntry(String baseUri, EntityResponse response, Writer w){
 		
 		EdmEntitySet ees = response.getEntitySet();
 		String entityName = ees.name;
@@ -35,8 +37,25 @@ public class AtomFeedWriter extends BaseWriter {
 		writer.writeAttribute("xml:base", baseUri);
 		
 		
-		writeEntry(writer,response.getEntity(),entityName,baseUri,updated,ees);
+		writeEntry(writer,response.getEntity().getKeyProperties(),response.getEntity().getProperties(),entityName,baseUri,updated,ees);
 		writer.endDocument();
+	}
+	
+	public static void generateRequestEntry(DataServicesAtomEntry request, Writer w){
+		
+		DateTime utc = new DateTime().withZone(DateTimeZone.UTC); 
+		String updated = toString(utc);
+		
+		XmlWriter writer = new XmlWriter(w);
+		writer.startDocument();
+		
+		writer.startElement(new QName("entry"),atom);
+		writer.writeNamespace("d", d);
+		writer.writeNamespace("m", m);		
+		
+	    writeEntry(writer,null,request.properties,null,null,updated,null);
+		writer.endDocument();
+			
 	}
 	
 	
@@ -68,7 +87,7 @@ public class AtomFeedWriter extends BaseWriter {
 		
 		for(OEntity entity : response.getEntities()){
 			writer.startElement("entry");
-			writeEntry(writer,entity,entityName,baseUri,updated,ees);
+			writeEntry(writer,entity.getKeyProperties(),entity.getProperties(),entityName,baseUri,updated,ees);
 			writer.endElement("entry");
 		}
 		writer.endDocument();
@@ -78,21 +97,26 @@ public class AtomFeedWriter extends BaseWriter {
 
 
 
-	private static void writeEntry(XmlWriter writer, OEntity entity, String entityName, String baseUri, String updated, EdmEntitySet ees){
+	private static void writeEntry(XmlWriter writer, List<OProperty<?>> keyProperties, List<OProperty<?>> entityProperties, String entityName, String baseUri, String updated, EdmEntitySet ees){
 		
 		String key = null;
-		if (entity.getKeyProperties().size() ==1){
-			Object keyValue = entity.getKeyProperties().get(0).getValue();
-			key = keyValue.toString();
-			if (keyValue instanceof String)
-				key= "'"+ key + "'";
-		} else {
-			throw new RuntimeException("Implement multiple keys");
+		if (keyProperties != null) {
+			if (keyProperties.size() ==1){
+				Object keyValue = keyProperties.get(0).getValue();
+				key = keyValue.toString();
+				if (keyValue instanceof String)
+					key= "'"+ key + "'";
+			} else {
+				throw new RuntimeException("Implement multiple keys");
+			}
 		}
 		
-		String relid = entityName + "(" + key + ")";
-		String absid = baseUri + relid;
-		writeElement(writer,"id",absid);
+		String relid = null;
+		if (entityName != null) {
+			relid = entityName + "(" + key + ")";
+			String absid = baseUri + relid;
+			writeElement(writer,"id",absid);
+		}
 		
 		writeElement(writer,"title",null,"type","text");
 		writeElement(writer,"updated",updated);
@@ -101,34 +125,38 @@ public class AtomFeedWriter extends BaseWriter {
 		writeElement(writer,"name",null);
 		writer.endElement("author");
 		
-		writeElement(writer,"link",null,"rel","edit","title",entityName,"href",relid);
+		if (entityName != null) 
+			writeElement(writer,"link",null,"rel","edit","title",entityName,"href",relid);
 		
 		
-
-		for(EdmNavigationProperty np : ees.type.navigationProperties){
+		if (ees != null) {
+			for(EdmNavigationProperty np : ees.type.navigationProperties){
+				
+				//  <link rel="http://schemas.microsoft.com/ado/2007/08/dataservices/related/Products" type="application/atom+xml;type=feed" title="Products" 
+				// href="Suppliers(1)/Products" /> 
 			
-			//  <link rel="http://schemas.microsoft.com/ado/2007/08/dataservices/related/Products" type="application/atom+xml;type=feed" title="Products" 
-			// href="Suppliers(1)/Products" /> 
-		
-			String otherEntity = np.toRole.type.name;
-			String rel = related + otherEntity;
-			String type ="application/atom+xml;type=feed";
-			String title = otherEntity;
-			String href = relid + "/" + otherEntity;
+				String otherEntity = np.toRole.type.name;
+				String rel = related + otherEntity;
+				String type ="application/atom+xml;type=feed";
+				String title = otherEntity;
+				String href = relid + "/" + otherEntity;
+				
+				writeElement(writer, "link",null,"rel",rel,"type",type,"title",title,"href",href);
 			
-			writeElement(writer, "link",null,"rel",rel,"type",type,"title",title,"href",href);
-		
+			}
+			
+			writeElement(writer,"category",null,"term",ees.type.getFQName(),"scheme",scheme);
 		}
 		
 		
-		writeElement(writer,"category",null,"term",ees.type.getFQName(),"scheme",scheme);
+		
 		
 		writer.startElement("content");
 		writer.writeAttribute("type", MediaType.APPLICATION_XML);
 		
 		writer.startElement(new QName(m,"properties","m"));
 		
-		for(OProperty<?> prop : entity.getProperties()){
+		for(OProperty<?> prop : entityProperties){
 			String name = prop.getName();
 			EdmType type = prop.getType();
 			Object value = prop.getValue();

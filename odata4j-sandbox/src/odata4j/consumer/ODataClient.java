@@ -18,7 +18,10 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
+import odata4j.core.OProperties;
+import odata4j.core.OProperty;
 import odata4j.edm.EdmType;
+import odata4j.xml.AtomFeedWriter;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -69,7 +72,7 @@ public class ODataClient {
 	
 	public static class DataServicesAtomEntry extends AtomEntry {
 		public String etag;
-		public List<EntityProperty> properties;
+		public List<OProperty<?>> properties;
 		
 		@Override
 		public String toString() {
@@ -78,23 +81,23 @@ public class ODataClient {
 	}
 	
 	
-	public abstract static class EntityProperty {
-		public String type;
-		public String name;
-		
-		
-		@Override
-		public String toString() {
-			return ReflectionToStringBuilder.toString(this,ToStringStyle.SHORT_PREFIX_STYLE);
-		}
-	}
-	
-	public static class StringEntityProperty extends EntityProperty {
-		public String value;
-	}
-	public static class ComplexEntityProperty extends EntityProperty {
-		public Iterable<EntityProperty> properties;
-	}
+//	public abstract static class EntityProperty {
+//		public String type;
+//		public String name;
+//		
+//		
+//		@Override
+//		public String toString() {
+//			return ReflectionToStringBuilder.toString(this,ToStringStyle.SHORT_PREFIX_STYLE);
+//		}
+//	}
+//	
+//	public static class StringEntityProperty extends EntityProperty {
+//		public String value;
+//	}
+//	public static class ComplexEntityProperty extends EntityProperty {
+//		public Iterable<EntityProperty> properties;
+//	}
 	
 
 	private static final String NS_APP = "http://www.w3.org/2007/app";
@@ -128,6 +131,7 @@ public class ODataClient {
 	private final Map<String,String> headers;
 	
 	public static boolean DUMP_REQUEST_HEADERS;
+	public static boolean DUMP_REQUEST_BODY;
 	public static boolean DUMP_RESPONSE_HEADERS;
 	public static boolean DUMP_RESPONSE_BODY;
 	
@@ -146,7 +150,8 @@ public class ODataClient {
 	public Iterable<CollectionInfo> getCollections(ODataClientRequest request) {
 
 		try {
-			XMLEventReader reader = doXmlRequest(request);
+			ClientResponse response = doRequest(request,200);
+			XMLEventReader reader = doXmlRequest(response);
 			return parseCollections(reader);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -157,8 +162,8 @@ public class ODataClient {
 	
 	public AtomEntry getEntity(ODataClientRequest request){
 		try {
-		
-			XMLEventReader reader = doXmlRequest(request);
+			ClientResponse response = doRequest(request,200);
+			XMLEventReader reader = doXmlRequest(response);
 			return parseFeed(reader).entries.iterator().next();
 		} catch (Exception e) {
 			
@@ -172,7 +177,8 @@ public class ODataClient {
 	public AtomFeed getEntities(ODataClientRequest request){
 		
 		try {
-			XMLEventReader reader = doXmlRequest(request);
+			ClientResponse response = doRequest(request,200);
+			XMLEventReader reader = doXmlRequest(response);
 			return parseFeed(reader);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -180,17 +186,36 @@ public class ODataClient {
 	
 	}
 	
+	public DataServicesAtomEntry createEntity(ODataClientRequest request){
+		
+		try {
+			ClientResponse response = doRequest(request,201);
+			XMLEventReader reader = doXmlRequest(response);
+			return (DataServicesAtomEntry)parseFeed(reader).entries.iterator().next();
+		} catch (Exception e) {
+			
+			throw new RuntimeException(e);
+		}
+		
+	}
 	
-	private XMLEventReader doXmlRequest(ODataClientRequest request) throws Exception {
+	public boolean updateEntity(ODataClientRequest request) {
+		ClientResponse response = doRequest(request,204);
+		return true;
+	}
+	
+	private ClientResponse doRequest(ODataClientRequest request, int expectedResponseStatus){ 
 		Client client = Client.create();
 		WebResource webResource = client.resource(request.getUrl());
+		
+		// set query params
 		for(String qpn : request.getQueryParams().keySet()){
 			webResource = webResource.queryParam(qpn, request.getQueryParams().get(qpn));
 		}
 		
 		WebResource.Builder b = webResource.getRequestBuilder();
 		
-		
+		// set headers
 		b = b.accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML);
 		
 		for(String header : headers.keySet()){
@@ -200,15 +225,51 @@ public class ODataClient {
 			b.header(header,request.getHeaders().get(header));
 		}
 
-		if(DUMP_REQUEST_HEADERS)
-			log("GET " + webResource.toString());
+		// method Tunneling, MERGE only for now (jersey hates it)
+		String method = request.getMethod();
+		if (method.equals("MERGE")){
+			b.header("X-HTTP-METHOD",method);
+			method = "POST";
+		}
 		
-		ClientResponse response = b.get(ClientResponse.class);
-	
+		if(DUMP_REQUEST_HEADERS)
+			log(request.getMethod() + " " + webResource.toString());
+		
+		
+		
+		// request body
+		if(request.getEntry() != null){
+			
+			DataServicesAtomEntry dsae = request.getEntry();
+			
+			StringWriter sw = new StringWriter();
+			AtomFeedWriter.generateRequestEntry(dsae, sw);
+			String entity = sw.toString();
+			if(DUMP_REQUEST_BODY)
+				log(entity);
+			b.entity(entity,MediaType.APPLICATION_ATOM_XML);
+			
+			
+		}
+		
+		// execute request
+		ClientResponse response = b.method(method,ClientResponse.class);
+		
 		
 		if (DUMP_RESPONSE_HEADERS)
 			dumpHeaders(response);
 		int status = response.getStatus();
+		if (status != expectedResponseStatus){
+			throw new RuntimeException(String.format("Expected status %s, found %s:",expectedResponseStatus,status) + "\n" + response.getEntity(String.class));
+		}
+		
+		
+		return response;
+	}
+	
+	private XMLEventReader doXmlRequest(ClientResponse response) throws Exception {
+		
+		
 		String textEntity = response.getEntity(String.class);
 		if (DUMP_RESPONSE_BODY)
 			log(textEntity);
@@ -346,11 +407,7 @@ public class ODataClient {
 	private DataServicesAtomEntry parseDSAtomEntry(String etag, XMLEventReader reader, XMLEvent event2) throws Exception {
 		DataServicesAtomEntry dsae = new DataServicesAtomEntry();
 		dsae.etag = etag;
-		List<EntityProperty> properties = new ArrayList<EntityProperty>();
-		for(EntityProperty ep : parseProperties(reader,event2.asStartElement())){
-			properties.add(ep);
-		}
-		dsae.properties= properties;
+		dsae.properties= Enumerable.create(parseProperties(reader,event2.asStartElement())).toList();
 		return dsae;
 	}
 	
@@ -373,8 +430,8 @@ public class ODataClient {
 	
 	
 	
-	private Iterable<EntityProperty> parseProperties(XMLEventReader reader, StartElement propertiesElement) throws Exception {
-		List<EntityProperty> rt = new ArrayList<EntityProperty>();
+	private Iterable<OProperty<?>> parseProperties(XMLEventReader reader, StartElement propertiesElement) throws Exception {
+		List<OProperty<?>> rt = new ArrayList<OProperty<?>>();
 		
 		while (reader.hasNext()) {
 			XMLEvent event = reader.nextEvent();
@@ -391,6 +448,8 @@ public class ODataClient {
 				Attribute nullAttribute = event.asStartElement().getAttributeByName(M_NULL);
 				boolean isNull = nullAttribute != null && nullAttribute.getValue().equals("true");
 				
+				OProperty<?> op = null;
+				
 				String type = null;
 				boolean isComplexType = false;
 				if (typeAttribute!=null) {
@@ -398,21 +457,13 @@ public class ODataClient {
 					EdmType et = EdmType.fromTypeString(type);
 					isComplexType  = et==null;
 				}
-				EntityProperty ep = null;
+				
 				if (isComplexType){
-					ComplexEntityProperty cep = new ComplexEntityProperty();
-					if (!isNull)
-						cep.properties = Enumerable.create( parseProperties(reader,event.asStartElement())).toList();
-					ep = cep;
+					op = OProperties.complex(name, type,  isNull?null:Enumerable.create( parseProperties(reader,event.asStartElement())).toList());
 				} else {
-					StringEntityProperty sep = new StringEntityProperty();
-					if (!isNull)
-						sep.value = reader.getElementText();
-					ep = sep;
+					op = OProperties.parse(name,type, isNull?null:reader.getElementText());
 				}
-				ep.name = name;
-				ep.type = type;
-				rt.add(ep);
+				rt.add(op);
 				
 			}
 			
@@ -425,6 +476,7 @@ public class ODataClient {
 	
 	
 	private void dumpHeaders(ClientResponse response){
+		log("Status: " + response.getStatus());
 		for(String key : response.getHeaders().keySet()){
 			log(key+ ": " + response.getHeaders().getFirst(key));
 		}
@@ -525,4 +577,7 @@ public class ODataClient {
 	private static void log(String message) {
 		System.out.println(message);
 	}
+
+
+	
 }
