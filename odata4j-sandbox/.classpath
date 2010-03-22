@@ -23,12 +23,12 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/odata4j-sandbox/lib/commons-lang-2.5-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/commons-codec-1.4.jar">
+	<classpathentry exported="true" kind="lib" path="lib/commons-codec-1.4.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/odata4j-sandbox/lib/commons-codec-1.4-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/joda-time-1.6.jar">
+	<classpathentry exported="true" kind="lib" path="lib/joda-time-1.6.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/odata4j-sandbox/lib/joda-time-1.6-javadoc.jar!/"/>
 		</attributes>

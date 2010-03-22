@@ -55,6 +55,11 @@ public class EdmType {
 	public String toTypeString(){
 		return typeString;
 	}
+	
+	@Override
+	public String toString() {
+		return toTypeString();
+	}
 //	public static EdmType fromTypeString(String value){
 //		for(EdmType et : values()){
 //			if (et.toTypeString().equals(value))

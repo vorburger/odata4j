@@ -61,7 +61,7 @@ public class OModifyImpl<T> implements OModify<T> {
 		String path = Enumerable.create(segments).join("/");
 			
 		ODataClientRequest request = updateRoot!=null?ODataClientRequest.put(serviceRootUri + path,entry):ODataClientRequest.merge(serviceRootUri + path,entry);
-		
+		request = request.header("Content-Type", MediaType.APPLICATION_XML);
 		boolean rt = client.updateEntity(request);
 		return rt;
 	}
@@ -69,8 +69,9 @@ public class OModifyImpl<T> implements OModify<T> {
 
 
 	@Override
-	public OModify<T> property(OProperty<?> prop) {
-		props.add(prop);
+	public OModify<T> properties(OProperty<?>... props) {
+		for(OProperty<?> prop : props)
+			this.props.add(prop);
 		return this;
 	}
 

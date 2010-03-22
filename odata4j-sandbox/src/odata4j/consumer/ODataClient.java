@@ -18,6 +18,7 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
+import odata4j.consumer.behaviors.MethodTunnelingBehavior;
 import odata4j.core.OData;
 import odata4j.core.OProperty;
 import odata4j.core.OClientBehavior;
@@ -82,24 +83,6 @@ public class ODataClient {
 	}
 	
 	
-//	public abstract static class EntityProperty {
-//		public String type;
-//		public String name;
-//		
-//		
-//		@Override
-//		public String toString() {
-//			return ReflectionToStringBuilder.toString(this,ToStringStyle.SHORT_PREFIX_STYLE);
-//		}
-//	}
-//	
-//	public static class StringEntityProperty extends EntityProperty {
-//		public String value;
-//	}
-//	public static class ComplexEntityProperty extends EntityProperty {
-//		public Iterable<EntityProperty> properties;
-//	}
-	
 
 	private static final String NS_APP = "http://www.w3.org/2007/app";
 	private static final String NS_XML = "http://www.w3.org/XML/1998/namespace";
@@ -134,10 +117,13 @@ public class ODataClient {
 	public static boolean DUMP_RESPONSE_HEADERS;
 	public static boolean DUMP_RESPONSE_BODY;
 	
+	private final OClientBehavior[] requiredBehaviors = new OClientBehavior[]{new MethodTunnelingBehavior("MERGE")};  // jersey hates MERGE, tunnel through POST
 	private final OClientBehavior[] behaviors;
 	
 	public ODataClient(OClientBehavior... behaviors) {
-		this.behaviors = behaviors;
+		
+		this.behaviors = Enumerable.create(requiredBehaviors)
+			.concat(Enumerable.create(behaviors)).toArray(OClientBehavior.class);
 	}
 	
 
@@ -227,19 +213,12 @@ public class ODataClient {
 		// set headers
 		b = b.accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML);
 		
-//		for(String header : headers.keySet()){
-//			b.header(header, headers.get(header));
-//		}
 		for(String header : request.getHeaders().keySet()){
 			b.header(header,request.getHeaders().get(header));
 		}
 
-		// method Tunneling, MERGE only for now (jersey hates it)
-		String method = request.getMethod();
-		if (method.equals("MERGE")){
-			b.header("X-HTTP-METHOD",method);
-			method = "POST";
-		}
+
+//		}
 		
 		if(DUMP_REQUEST_HEADERS)
 			log(request.getMethod() + " " + webResource.toString());
@@ -262,7 +241,7 @@ public class ODataClient {
 		}
 		
 		// execute request
-		ClientResponse response = b.method(method,ClientResponse.class);
+		ClientResponse response = b.method( request.getMethod(),ClientResponse.class);
 		
 		
 		if (DUMP_RESPONSE_HEADERS)

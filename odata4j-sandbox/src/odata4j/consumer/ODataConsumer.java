@@ -24,7 +24,7 @@ public class ODataConsumer {
 	}
 	
 	public static ODataConsumer create(String serviceRootUri){
-		return create(serviceRootUri,null);
+		return new ODataConsumer(serviceRootUri);
 	}
 	public static ODataConsumer create(String serviceRootUri,OClientBehavior... behaviors){
 		return new ODataConsumer(serviceRootUri,behaviors);

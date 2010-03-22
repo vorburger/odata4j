@@ -12,12 +12,14 @@ import odata4j.core.OProperty;
 import odata4j.edm.EdmEntitySet;
 import odata4j.edm.EdmNavigationProperty;
 import odata4j.edm.EdmType;
+import odata4j.internal.InternalUtil;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDateTime;
 
 public class AtomFeedWriter extends BaseWriter {
 
@@ -101,14 +103,17 @@ public class AtomFeedWriter extends BaseWriter {
 		
 		String key = null;
 		if (keyProperties != null) {
-			if (keyProperties.size() ==1){
-				Object keyValue = keyProperties.get(0).getValue();
-				key = keyValue.toString();
-				if (keyValue instanceof String)
-					key= "'"+ key + "'";
-			} else {
-				throw new RuntimeException("Implement multiple keys");
-			}
+			
+			key = InternalUtil.keyString(keyProperties.toArray());
+//			
+//			if (keyProperties.size() ==1){
+//				Object keyValue = keyProperties.get(0).getValue();
+//				key = keyValue.toString();
+//				if (keyValue instanceof String)
+//					key= "'"+ key + "'";
+//			} else {
+//				throw new RuntimeException("Implement multiple keys");
+//			}
 		}
 		
 		String relid = null;
@@ -181,7 +186,9 @@ public class AtomFeedWriter extends BaseWriter {
 				if (value != null) sValue = value.toString();
 			}else if (type == EdmType.DATETIME){
 				writer.writeAttribute(new QName(m,"type","m"), type.toTypeString());
-				if (value != null) sValue = toString(new DateTime(value));
+				LocalDateTime ldt = (LocalDateTime)value;
+				DateTime dt = ldt.toDateTime(DateTimeZone.UTC);
+				if (value != null) sValue = toString(dt);
 			}  else if (type == EdmType.BINARY){
 				writer.writeAttribute(new QName(m,"type","m"), type.toTypeString());
 				byte[] bValue = (byte[]) value;

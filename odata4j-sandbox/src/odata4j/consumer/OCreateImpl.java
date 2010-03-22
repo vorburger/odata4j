@@ -38,8 +38,9 @@ public class OCreateImpl<T> implements OCreate<T> {
 	}
 
 	@Override
-	public OCreate<T> property(OProperty<?> prop) {
-		props.add(prop);
+	public OCreate<T> properties(OProperty<?>... props) {
+		for(OProperty<?> prop : props)
+			this.props.add(prop);
 		return this;
 	}
 

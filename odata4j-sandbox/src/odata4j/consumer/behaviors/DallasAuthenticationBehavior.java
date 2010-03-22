@@ -1,6 +1,3 @@
-/**
- * 
- */
 package odata4j.consumer.behaviors;
 
 import odata4j.consumer.ODataClientRequest;
