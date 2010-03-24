@@ -1,7 +1,18 @@
 package odata4j.internal;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+
+import javax.ws.rs.ext.RuntimeDelegate;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.core.impl.provider.entity.StringProvider;
+import com.sun.jersey.core.impl.provider.header.MediaTypeProvider;
+import com.sun.jersey.core.spi.factory.AbstractRuntimeDelegate;
+import com.sun.jersey.spi.HeaderDelegateProvider;
 
 import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
@@ -9,9 +20,62 @@ import odata4j.core.OProperty;
 import odata4j.edm.EdmType;
 import core4j.Enumerable;
 import core4j.Func1;
+import core4j.Funcs;
+import core4j.ThrowingFunc1;
 
 public class InternalUtil {
 
+	private static boolean RUNNING_ON_ANDROID;
+	static {
+		try {Class.forName("android.app.Activity"); RUNNING_ON_ANDROID = true;} catch (Exception e) { RUNNING_ON_ANDROID = false;}
+	
+		if (runningOnAndroid()){
+			androidInit();
+		}
+	}
+	private static void androidInit(){
+		
+		 
+        try  {
+	        RuntimeDelegate rd = RuntimeDelegate.getInstance();
+	        Field f = AbstractRuntimeDelegate.class.getDeclaredField("hps");
+	        f.setAccessible(true);
+	        Set<HeaderDelegateProvider> hps =    (Set<HeaderDelegateProvider>) f.get(rd);
+	        hps.clear();
+	        hps.add(new MediaTypeProvider());
+	    } catch(Exception e){
+	    	throw new RuntimeException(e);
+	    }
+	}
+	public static Client androidSafeClient(){
+		DefaultClientConfig cc = new DefaultClientConfig();
+		cc.getSingletons().add(new StringProvider());
+		Client client = Client.create(cc);
+		return client;
+	}
+	
+	public static boolean runningOnAndroid(){
+		return RUNNING_ON_ANDROID;
+	}
+	
+	public static String reflectionToString(final Object obj){
+		StringBuilder rt = new StringBuilder();
+		Class<?> objClass = obj.getClass();
+		rt.append(objClass.getSimpleName());
+		rt.append('[');
+		
+		String content = Enumerable.create(objClass.getFields()).select(Funcs.wrap(new ThrowingFunc1<Field,String>(){
+			public String apply(Field f) throws Exception{
+				Object fValue = f.get(obj);
+				return f.getName() + ":" + fValue;
+			}})).join(",");
+		
+		rt.append(content);
+		
+		rt.append(']');
+		return rt.toString();
+	}
+	
 	public static String keyString(Object[] key){
 		
 		String keyValue;

@@ -3,30 +3,26 @@ package odata4j.consumer;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLEventWriter;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.events.Attribute;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
 
 import odata4j.consumer.behaviors.MethodTunnelingBehavior;
+import odata4j.core.OClientBehavior;
 import odata4j.core.OData;
 import odata4j.core.OProperty;
-import odata4j.core.OClientBehavior;
 import odata4j.edm.EdmType;
+import odata4j.internal.InternalUtil;
+import odata4j.stax2.Attribute2;
+import odata4j.stax2.QName2;
+import odata4j.stax2.StartElement2;
+import odata4j.stax2.XMLEvent2;
+import odata4j.stax2.XMLEventReader2;
+import odata4j.stax2.XMLEventWriter2;
+import odata4j.stax2.XMLFactoryProvider2;
+import odata4j.stax2.XMLInputFactory2;
 import odata4j.xml.AtomFeedWriter;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -43,7 +39,7 @@ public class ODataClient {
 
 		@Override
 		public String toString() {
-			return ReflectionToStringBuilder.toString(this,ToStringStyle.SHORT_PREFIX_STYLE);
+			return InternalUtil.reflectionToString(this);
 		}
 	}
 	
@@ -68,7 +64,7 @@ public class ODataClient {
 		
 		@Override
 		public String toString() {
-			return ReflectionToStringBuilder.toString(this,ToStringStyle.SHORT_PREFIX_STYLE);
+			return InternalUtil.reflectionToString(this);
 		}
 	}
 	
@@ -78,7 +74,7 @@ public class ODataClient {
 		
 		@Override
 		public String toString() {
-			return ReflectionToStringBuilder.toString(this,ToStringStyle.SHORT_PREFIX_STYLE);
+			return InternalUtil.reflectionToString(this);
 		}
 	}
 	
@@ -91,25 +87,25 @@ public class ODataClient {
 	public static final String NS_METADATA = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata";
 	public static final String NS_DATASERVICES = "http://schemas.microsoft.com/ado/2007/08/dataservices";
 	
-	public static final QName ATOM_ENTRY = new QName(NS_ATOM,"entry");
-	public static final QName ATOM_ID = new QName(NS_ATOM,"id");
-	public static final QName ATOM_TITLE = new QName(NS_ATOM,"title");
-	public static final QName ATOM_UPDATED = new QName(NS_ATOM,"updated");
-	public static final QName ATOM_CATEGORY = new QName(NS_ATOM,"category");
-	public static final QName ATOM_CONTENT = new QName(NS_ATOM,"content");
-	public static final QName ATOM_LINK = new QName(NS_ATOM,"link");
+	public static final QName2 ATOM_ENTRY = new QName2(NS_ATOM,"entry");
+	public static final QName2 ATOM_ID = new QName2(NS_ATOM,"id");
+	public static final QName2 ATOM_TITLE = new QName2(NS_ATOM,"title");
+	public static final QName2 ATOM_UPDATED = new QName2(NS_ATOM,"updated");
+	public static final QName2 ATOM_CATEGORY = new QName2(NS_ATOM,"category");
+	public static final QName2 ATOM_CONTENT = new QName2(NS_ATOM,"content");
+	public static final QName2 ATOM_LINK = new QName2(NS_ATOM,"link");
 	
-	public static final QName APP_WORKSPACE = new QName(NS_APP,"workspace");
-	public static final QName APP_SERVICE = new QName(NS_APP,"service");
-	public static final QName APP_COLLECTION = new QName(NS_APP,"collection");
-	public static final QName APP_ACCEPT = new QName(NS_APP,"accept");
+	public static final QName2 APP_WORKSPACE = new QName2(NS_APP,"workspace");
+	public static final QName2 APP_SERVICE = new QName2(NS_APP,"service");
+	public static final QName2 APP_COLLECTION = new QName2(NS_APP,"collection");
+	public static final QName2 APP_ACCEPT = new QName2(NS_APP,"accept");
 	
-	public static final QName M_ETAG = new QName(NS_METADATA,"etag");
-	public static final QName M_PROPERTIES = new QName(NS_METADATA,"properties");
-	public static final QName M_TYPE = new QName(NS_METADATA,"type");
-	public static final QName M_NULL = new QName(NS_METADATA,"null");
+	public static final QName2 M_ETAG = new QName2(NS_METADATA,"etag");
+	public static final QName2 M_PROPERTIES = new QName2(NS_METADATA,"properties");
+	public static final QName2 M_TYPE = new QName2(NS_METADATA,"type");
+	public static final QName2 M_NULL = new QName2(NS_METADATA,"null");
 	
-	public static final QName XML_BASE = new QName(NS_XML,"base");
+	public static final QName2 XML_BASE = new QName2(NS_XML,"base");
 	
 	
 	public static boolean DUMP_REQUEST_HEADERS;
@@ -120,6 +116,8 @@ public class ODataClient {
 	private final OClientBehavior[] requiredBehaviors = new OClientBehavior[]{new MethodTunnelingBehavior("MERGE")};  // jersey hates MERGE, tunnel through POST
 	private final OClientBehavior[] behaviors;
 	
+	private final Client client = InternalUtil.androidSafeClient();
+	
 	public ODataClient(OClientBehavior... behaviors) {
 		
 		this.behaviors = Enumerable.create(requiredBehaviors)
@@ -129,13 +127,11 @@ public class ODataClient {
 
 	
 	
-	
-	
 	public Iterable<CollectionInfo> getCollections(ODataClientRequest request) {
 
 		try {
 			ClientResponse response = doRequest(request,200);
-			XMLEventReader reader = doXmlRequest(response);
+			XMLEventReader2 reader = doXmlRequest(response);
 			return parseCollections(reader);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -147,7 +143,7 @@ public class ODataClient {
 	public AtomEntry getEntity(ODataClientRequest request){
 		try {
 			ClientResponse response = doRequest(request,200);
-			XMLEventReader reader = doXmlRequest(response);
+			XMLEventReader2 reader = doXmlRequest(response);
 			return parseFeed(reader).entries.iterator().next();
 		} catch (Exception e) {
 			
@@ -162,7 +158,7 @@ public class ODataClient {
 		
 		try {
 			ClientResponse response = doRequest(request,200);
-			XMLEventReader reader = doXmlRequest(response);
+			XMLEventReader2 reader = doXmlRequest(response);
 			return parseFeed(reader);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -174,7 +170,7 @@ public class ODataClient {
 		
 		try {
 			ClientResponse response = doRequest(request,201);
-			XMLEventReader reader = doXmlRequest(response);
+			XMLEventReader2 reader = doXmlRequest(response);
 			return (DataServicesAtomEntry)parseFeed(reader).entries.iterator().next();
 		} catch (Exception e) {
 			
@@ -200,7 +196,6 @@ public class ODataClient {
 		}
 		
 		
-		Client client = Client.create();
 		WebResource webResource = client.resource(request.getUrl());
 		
 		// set query params
@@ -218,7 +213,6 @@ public class ODataClient {
 		}
 
 
-//		}
 		
 		if(DUMP_REQUEST_HEADERS)
 			log(request.getMethod() + " " + webResource.toString());
@@ -255,35 +249,35 @@ public class ODataClient {
 		return response;
 	}
 	
-	private XMLEventReader doXmlRequest(ClientResponse response) throws Exception {
+	private XMLEventReader2 doXmlRequest(ClientResponse response) throws Exception {
 		
 		
 		String textEntity = response.getEntity(String.class);
 		if (DUMP_RESPONSE_BODY)
 			log(textEntity);
 		
-		XMLInputFactory f = XMLInputFactory.newInstance();
+		XMLInputFactory2 f = XMLFactoryProvider2.getInstance().newXMLInputFactory2();
 		
-		XMLEventReader reader = f.createXMLEventReader(new StringReader(textEntity));
+		XMLEventReader2 reader = f.createXMLEventReader(new StringReader(textEntity));
 		return reader;
 	}
 	
 	
-	private AtomFeed parseFeed(XMLEventReader reader) throws Exception{
+	private AtomFeed parseFeed(XMLEventReader2 reader) throws Exception{
 		
 		AtomFeed feed = new AtomFeed();
 		List<AtomEntry> rt = new ArrayList<AtomEntry>();
 		
 		while (reader.hasNext()) {
-			XMLEvent event = reader.nextEvent();
+			XMLEvent2 event = reader.nextEvent();
 			
 			if (isStartElement(event, ATOM_ENTRY)){
 				
 				rt.add(parseEntry(reader,event.asStartElement()));
 			}
 			else if (isStartElement(event, ATOM_LINK)){
-				if ("next".equals(event.asStartElement().getAttributeByName(new QName("rel")).getValue())){
-					feed.next = event.asStartElement().getAttributeByName(new QName("href")).getValue();
+				if ("next".equals(event.asStartElement().getAttributeByName(new QName2("rel")).getValue())){
+					feed.next = event.asStartElement().getAttributeByName(new QName2("href")).getValue();
 				}
 			}
 			
@@ -294,14 +288,14 @@ public class ODataClient {
 		
 	}
 	
-	private String getAttributeValueIfExists(StartElement element, String localName){
-		return getAttributeValueIfExists(element,new QName(null,localName));
+	private String getAttributeValueIfExists(StartElement2 element, String localName){
+		return getAttributeValueIfExists(element,new QName2(null,localName));
 	}
-	private String getAttributeValueIfExists(StartElement element, QName attName){
-		Attribute rt = element.getAttributeByName(attName);
+	private String getAttributeValueIfExists(StartElement2 element, QName2 attName){
+		Attribute2 rt = element.getAttributeByName(attName);
 		return rt==null?null:rt.getValue();
 	}
-	private AtomEntry parseEntry(XMLEventReader reader, StartElement entryElement) throws Exception {
+	private AtomEntry parseEntry(XMLEventReader2 reader, StartElement2 entryElement) throws Exception {
 		
 		String id = null;
 		String categoryTerm = null;
@@ -315,7 +309,7 @@ public class ODataClient {
 		AtomEntry rt = null;
 		
 		while (reader.hasNext()) {
-			XMLEvent event = reader.nextEvent();
+			XMLEvent2 event = reader.nextEvent();
 			
 			if (event.isEndElement() && event.asEndElement().getName().equals(entryElement.getName())){
 				rt.id = id;
@@ -349,11 +343,11 @@ public class ODataClient {
 			
 				if ( contentType.equals(MediaType.APPLICATION_XML)){
 					
-					StartElement contentElement = event.asStartElement();
-					StartElement valueElement = null;
+					StartElement2 contentElement = event.asStartElement();
+					StartElement2 valueElement = null;
 					while (reader.hasNext()) {
 						
-						XMLEvent event2 = reader.nextEvent();
+						XMLEvent2 event2 = reader.nextEvent();
 						
 						if (valueElement==null && event2.isStartElement()){
 							valueElement = event2.asStartElement();
@@ -392,19 +386,19 @@ public class ODataClient {
 		throw new RuntimeException();
 	}
 	
-	private DataServicesAtomEntry parseDSAtomEntry(String etag, XMLEventReader reader, XMLEvent event2) throws Exception {
+	private DataServicesAtomEntry parseDSAtomEntry(String etag, XMLEventReader2 reader, XMLEvent2 event) throws Exception {
 		DataServicesAtomEntry dsae = new DataServicesAtomEntry();
 		dsae.etag = etag;
-		dsae.properties= Enumerable.create(parseProperties(reader,event2.asStartElement())).toList();
+		dsae.properties= Enumerable.create(parseProperties(reader,event.asStartElement())).toList();
 		return dsae;
 	}
 	
-	private String innerText(XMLEventReader reader, StartElement element) throws Exception {
+	private String innerText(XMLEventReader2 reader, StartElement2 element) throws Exception {
 		StringWriter sw = new StringWriter();
-		XMLEventWriter writer = XMLOutputFactory.newInstance().createXMLEventWriter(sw);
+		XMLEventWriter2 writer = XMLFactoryProvider2.getInstance().newXMLOutputFactory2().createXMLEventWriter(sw);
 		while (reader.hasNext()) {
 			
-			XMLEvent event = reader.nextEvent();
+			XMLEvent2 event = reader.nextEvent();
 			if (event.isEndElement() && event.asEndElement().getName().equals(element.getName())){
 				
 				return sw.toString();
@@ -418,11 +412,11 @@ public class ODataClient {
 	
 	
 	
-	private Iterable<OProperty<?>> parseProperties(XMLEventReader reader, StartElement propertiesElement) throws Exception {
+	private Iterable<OProperty<?>> parseProperties(XMLEventReader2 reader, StartElement2 propertiesElement) throws Exception {
 		List<OProperty<?>> rt = new ArrayList<OProperty<?>>();
 		
 		while (reader.hasNext()) {
-			XMLEvent event = reader.nextEvent();
+			XMLEvent2 event = reader.nextEvent();
 			
 			if (event.isEndElement() && event.asEndElement().getName().equals(propertiesElement.getName())){
 				return rt;
@@ -432,8 +426,8 @@ public class ODataClient {
 				
 				
 				String name = event.asStartElement().getName().getLocalPart();
-				Attribute typeAttribute = event.asStartElement().getAttributeByName(M_TYPE);
-				Attribute nullAttribute = event.asStartElement().getAttributeByName(M_NULL);
+				Attribute2 typeAttribute = event.asStartElement().getAttributeByName(M_TYPE);
+				Attribute2 nullAttribute = event.asStartElement().getAttributeByName(M_NULL);
 				boolean isNull = nullAttribute != null && nullAttribute.getValue().equals("true");
 				
 				OProperty<?> op = null;
@@ -475,13 +469,12 @@ public class ODataClient {
 	
 	
 	
-	private Iterable<CollectionInfo> parseCollections(XMLEventReader reader) throws Exception {
+	private Iterable<CollectionInfo> parseCollections(XMLEventReader2 reader) throws Exception {
 
 		
 		String baseUrl = null;
 		while (reader.hasNext()) {
-			XMLEvent event = reader.nextEvent();
-		
+			XMLEvent2 event = reader.nextEvent();
 			if (isStartElement(event,APP_SERVICE)){
 				baseUrl = event.asStartElement().getAttributeByName(XML_BASE).getValue();
 			}
@@ -498,11 +491,11 @@ public class ODataClient {
 	}
 	
 	
-	private Iterable<CollectionInfo> parseWorkspace(String baseUrl, XMLEventReader reader, StartElement startElement) throws Exception {
+	private Iterable<CollectionInfo> parseWorkspace(String baseUrl, XMLEventReader2 reader, StartElement2 startElement) throws Exception {
 		List<CollectionInfo> rt = new ArrayList<CollectionInfo>();
 	
 		while (reader.hasNext()) {
-			XMLEvent event = reader.nextEvent();
+			XMLEvent2 event = reader.nextEvent();
 			
 			if (event.isEndElement() && event.asEndElement().getName().equals(startElement.getName())){
 				return rt;
@@ -519,7 +512,7 @@ public class ODataClient {
 		return rt;
 	}
 	
-	private CollectionInfo parseCollection(String baseUrl, XMLEventReader reader, StartElement startElement) throws Exception {
+	private CollectionInfo parseCollection(String baseUrl, XMLEventReader2 reader, StartElement2 startElement) throws Exception {
 		CollectionInfo rt = new CollectionInfo();
 		
 		
@@ -527,7 +520,7 @@ public class ODataClient {
 		rt.url = urlCombine(baseUrl,href);
 		
 		while (reader.hasNext()) {
-			XMLEvent event = reader.nextEvent();
+			XMLEvent2 event = reader.nextEvent();
 			
 			if (event.isEndElement() && event.asEndElement().getName().equals(startElement.getName())){
 				return rt;
@@ -550,7 +543,7 @@ public class ODataClient {
 		return rt;
 	}
 	
-	private boolean isStartElement(XMLEvent event, QName qname) {
+	private boolean isStartElement(XMLEvent2 event, QName2 qname) {
 		return event.isStartElement() && event.asStartElement().getName().equals(qname);
 	}
 

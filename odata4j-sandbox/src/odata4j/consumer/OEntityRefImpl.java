@@ -5,7 +5,6 @@ import java.util.List;
 
 import odata4j.consumer.ODataClient.AtomEntry;
 import odata4j.consumer.ODataClient.DataServicesAtomEntry;
-import odata4j.core.OEntity;
 import odata4j.core.OEntityRef;
 import odata4j.internal.EntitySegment;
 import odata4j.internal.InternalUtil;

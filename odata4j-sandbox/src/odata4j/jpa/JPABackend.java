@@ -16,8 +16,8 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
-import odata4j.core.OEntity;
 import odata4j.core.OData;
+import odata4j.core.OEntity;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmDataServices;
 import odata4j.edm.EdmEntityContainer;

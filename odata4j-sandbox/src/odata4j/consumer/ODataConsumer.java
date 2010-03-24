@@ -1,12 +1,12 @@
 package odata4j.consumer;
 
 import odata4j.consumer.ODataClient.CollectionInfo;
+import odata4j.core.OClientBehavior;
 import odata4j.core.OCreate;
 import odata4j.core.OEntity;
 import odata4j.core.OEntityRef;
 import odata4j.core.OModify;
 import odata4j.core.OQuery;
-import odata4j.core.OClientBehavior;
 import core4j.Enumerable;
 import core4j.Func1;
 
