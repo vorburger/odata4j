@@ -1,13 +1,14 @@
 package odata4j.stax2;
 
 import odata4j.internal.InternalUtil;
+import odata4j.internal.PlatformUtil;
 
 public abstract class XMLFactoryProvider2 {
 
 	private static final XMLFactoryProvider2 STAX;
 	static {
 		try {
-			String clazz =  InternalUtil.runningOnAndroid()?
+			String clazz =  PlatformUtil.runningOnAndroid()?
 					"odata4j.stax2.domimpl.DomXMLFactoryProvider2":
 					"odata4j.stax2.staximpl.StaxXMLFactoryProvider2";
 			
@@ -25,4 +26,8 @@ public abstract class XMLFactoryProvider2 {
 	public abstract XMLOutputFactory2 newXMLOutputFactory2();
 	
 	public abstract XMLInputFactory2 newXMLInputFactory2();
+	
+	public abstract XMLWriterFactory2 newXMLWriterFactory2();
+	
+	
 }

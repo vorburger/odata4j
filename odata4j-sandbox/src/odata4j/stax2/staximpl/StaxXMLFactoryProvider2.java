@@ -24,9 +24,33 @@ import odata4j.stax2.XMLEventWriter2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLInputFactory2;
 import odata4j.stax2.XMLOutputFactory2;
+import odata4j.stax2.XMLWriter2;
+import odata4j.stax2.XMLWriterFactory2;
 
 public class StaxXMLFactoryProvider2 extends XMLFactoryProvider2 {
 
+	
+	public static QName toQName(QName2 qname) {
+		if (qname.getPrefix()==null)
+			return new QName(qname.getNamespaceURI(),qname.getLocalPart());
+		return new QName(qname.getNamespaceURI(),qname.getLocalPart(),qname.getPrefix());
+	}
+	
+	
+	@Override
+	public XMLWriterFactory2 newXMLWriterFactory2() {
+		return new StaxXMLWriterFactory2();
+	}
+	
+	private static class StaxXMLWriterFactory2 implements XMLWriterFactory2 {
+
+		@Override
+		public XMLWriter2 createXMLWriter(Writer writer) {
+			return new StaxXMLWriter2(writer);
+		}
+		
+	}
+	
 	@Override
 	public XMLInputFactory2 newXMLInputFactory2() {
 		return new StaxXMLInputFactory2(XMLInputFactory.newInstance());
@@ -185,7 +209,7 @@ public class StaxXMLFactoryProvider2 extends XMLFactoryProvider2 {
 		}
 		@Override
 		public Attribute2 getAttributeByName(QName2 name) {
-			Attribute att = real.getAttributeByName(new QName(name.getNamespaceURI(),name.getLocalPart()));
+			Attribute att = real.getAttributeByName(toQName(name));
 			if (att==null)
 				return null;
 			return new StaxAttribute2(att);
@@ -202,6 +226,18 @@ public class StaxXMLFactoryProvider2 extends XMLFactoryProvider2 {
 			return real.getValue();
 		}
 	}
+
+
+
+
+
+
+
+
+
+
+
+	
 	
 	
 }

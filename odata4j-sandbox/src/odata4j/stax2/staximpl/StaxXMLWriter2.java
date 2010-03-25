@@ -1,4 +1,4 @@
-package odata4j.xml;
+package odata4j.stax2.staximpl;
 
 import java.io.Writer;
 import java.util.Iterator;
@@ -10,15 +10,18 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 
+import odata4j.stax2.QName2;
+import odata4j.stax2.XMLWriter2;
+
 import core4j.Enumerable;
 
-public class XmlWriter {
+public class StaxXMLWriter2 implements XMLWriter2 {
 
 	//private final XMLStreamWriter writer;
 	private final XMLEventFactory eventFactory;
     private final XMLEventWriter eventWriter;
 	
-	public XmlWriter(Writer stream){
+	public StaxXMLWriter2(Writer stream){
 		XMLOutputFactory f = XMLOutputFactory.newInstance();
 		
 		try {
@@ -35,27 +38,32 @@ public class XmlWriter {
 	}
 
 	
-	public void setPrefix(String prefix, String namespaceUri){
-		try {
-			eventWriter.setPrefix(prefix, namespaceUri);
-		} catch (XMLStreamException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	public void setDefaultNamespace( String namespaceUri){
-		try {
-			eventWriter.setDefaultNamespace(namespaceUri);
-		} catch (XMLStreamException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	
+//	public void setPrefix(String prefix, String namespaceUri){
+//		try {
+//			eventWriter.setPrefix(prefix, namespaceUri);
+//		} catch (XMLStreamException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
+//	
+//	public void setDefaultNamespace( String namespaceUri){
+//		try {
+//			eventWriter.setDefaultNamespace(namespaceUri);
+//		} catch (XMLStreamException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
+	
 	public void startElement(String name) {
-		startElement(new QName(name));
+		startElement(new QName2(name));
 	}
-	public void startElement(QName qname) {
+	
+	public void startElement(QName2 qname) {
 		startElement(qname,null);
 	}
-	public void startElement(QName qname, String xmlns) {
+	
+	public void startElement(QName2 qname, String xmlns) {
 		//writer.setDefaultNamespace("http://www.example.com/ns1");
 	    try {
 	    	Iterator nsIterator = null;
@@ -64,7 +72,7 @@ public class XmlWriter {
 	    	}
 	    
 			//writer.writeStartElement(prefix,localName,namespaceURI);
-			XMLEvent event = eventFactory.createStartElement(qname, null,nsIterator);
+			XMLEvent event = eventFactory.createStartElement(StaxXMLFactoryProvider2.toQName(qname), null,nsIterator);
 			eventWriter.add(event);
 			
 		} catch (XMLStreamException e) {
@@ -72,6 +80,7 @@ public class XmlWriter {
 		}
 		
 	}
+	
 	
 	public void writeAttribute(String localName, String value){
 		 try {
@@ -84,10 +93,11 @@ public class XmlWriter {
 			throw new RuntimeException(e);
 		}
 	}
-	public void writeAttribute(QName qname, String value){
+	
+	public void writeAttribute(QName2 qname, String value){
 		 try {
 			//writer.writeAttribute(localName, value);
-			 XMLEvent event = eventFactory.createAttribute(qname,value);
+			 XMLEvent event = eventFactory.createAttribute(StaxXMLFactoryProvider2.toQName(qname),value);
 			 eventWriter.add(event);
 			 
 			
@@ -95,6 +105,7 @@ public class XmlWriter {
 			throw new RuntimeException(e);
 		}
 	}
+	
 	public void writeText(String content){
 		 try {
 			//writer.writeAttribute(localName, value);
@@ -107,6 +118,7 @@ public class XmlWriter {
 		}
 	}
 
+	
 	public void writeNamespace(String prefix, String namespaceUri){
 		 try {
 				//writer.writeNamespace(prefix, namespaceURI);
@@ -117,7 +129,7 @@ public class XmlWriter {
 			}
 		
 	}
-	
+
 	public void startDocument() {
 		try {
 			
@@ -127,6 +139,7 @@ public class XmlWriter {
 		}
 		
 	}
+	
 	public void endElement(String localName) {
 		try {
 			//writer.writeEndElement();

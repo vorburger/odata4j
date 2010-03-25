@@ -8,7 +8,7 @@ import odata4j.consumer.ODataClient;
 import odata4j.consumer.ODataClientRequest;
 import odata4j.core.OClientBehavior;
 
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec2.binary.Base64;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -26,7 +26,8 @@ public class AzureTableBehavior implements OClientBehavior {
 	@Override
 	public ODataClientRequest transform(ODataClientRequest request) {
 		 try {
-			 String date = new DateTime(DateTimeZone.UTC).toString("EEE, dd MMM yyyy HH:mm:ss zzz").replace("UTC", "GMT");
+			 String utc = new DateTime(DateTimeZone.UTC).toString("EEE, dd MMM yyyy HH:mm:ss zzz");
+			 String date = utc.substring(0,utc.lastIndexOf(' ')+1) + "GMT";
 			
 //			 VERB + "\n" + 
 //	         Content-MD5 + "\n" + 

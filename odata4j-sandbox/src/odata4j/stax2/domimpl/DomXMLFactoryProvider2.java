@@ -1,6 +1,7 @@
 package odata4j.stax2.domimpl;
 
 import java.io.Reader;
+import java.io.Writer;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -15,6 +16,8 @@ import org.xml.sax.InputSource;
 
 import core4j.ReadOnlyIterator;
 
+import odata4j.internal.InternalUtil;
+import odata4j.internal.PlatformUtil;
 import odata4j.stax2.Attribute2;
 import odata4j.stax2.EndElement2;
 import odata4j.stax2.QName2;
@@ -24,6 +27,8 @@ import odata4j.stax2.XMLEventReader2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLInputFactory2;
 import odata4j.stax2.XMLOutputFactory2;
+import odata4j.stax2.XMLWriter2;
+import odata4j.stax2.XMLWriterFactory2;
 
 public class DomXMLFactoryProvider2 extends XMLFactoryProvider2 {
 
@@ -37,24 +42,19 @@ public class DomXMLFactoryProvider2 extends XMLFactoryProvider2 {
 		throw new UnsupportedOperationException();
 	}
 
-	
-	private static class DomUtil{
-		private static String getTextContent(Element element){
-			// FOR ANDROID
-			StringBuilder buffer = new StringBuilder();
-			NodeList childList = element.getChildNodes();
-			for (int i = 0; i < childList.getLength(); i++) {
-			    Node child = childList.item(i);
-			    if (child.getNodeType() == Node.TEXT_NODE)
-			    	 buffer.append(child.getNodeValue());
-			}
-
-			return buffer.toString(); 
-		}
+	@Override
+	public XMLWriterFactory2 newXMLWriterFactory2() {
+		return new DomXMLWriterFactory2();
 	}
 	
-	
-	
+	private static class DomXMLWriterFactory2 implements XMLWriterFactory2{
+
+		@Override
+		public XMLWriter2 createXMLWriter(Writer writer) {
+			return new ManualXMLWriter2(writer);
+		}
+		
+	}
 	
 	private static class DomXMLInputFactory2 implements XMLInputFactory2{
 
@@ -110,7 +110,7 @@ public class DomXMLFactoryProvider2 extends XMLFactoryProvider2 {
 			
 			
 			public String getElementText() {
-				return DomUtil.getTextContent(current);
+				return PlatformUtil.getTextContent(current);
 			}
 
 
@@ -215,7 +215,7 @@ public class DomXMLFactoryProvider2 extends XMLFactoryProvider2 {
 		
 		@Override
 		public String toString() {
-			return "StartElement " + getName() + " " + DomUtil.getTextContent(element);
+			return "StartElement " + getName() + " " + PlatformUtil.getTextContent(element);
 		}
 		
 	}
@@ -233,7 +233,7 @@ public class DomXMLFactoryProvider2 extends XMLFactoryProvider2 {
 		
 		@Override
 		public String toString() {
-			return "EndElement " + getName() + " " + DomUtil.getTextContent(element);
+			return "EndElement " + getName() + " " + PlatformUtil.getTextContent(element);
 		}
 		
 	}

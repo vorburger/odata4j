@@ -1,6 +1,6 @@
 package odata4j.expression;
 
-import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec2.binary.Hex;
 
 public class PrintExpressionVisitor implements ExpressionVisitor {
 

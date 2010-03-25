@@ -13,6 +13,7 @@ import odata4j.core.OData;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmType;
 import odata4j.internal.InternalUtil;
+import odata4j.internal.PlatformUtil;
 import odata4j.stax2.Attribute2;
 import odata4j.stax2.QName2;
 import odata4j.stax2.StartElement2;
@@ -116,7 +117,7 @@ public class ODataClient {
 	private final OClientBehavior[] requiredBehaviors = new OClientBehavior[]{new MethodTunnelingBehavior("MERGE")};  // jersey hates MERGE, tunnel through POST
 	private final OClientBehavior[] behaviors;
 	
-	private final Client client = InternalUtil.androidSafeClient();
+	private final Client client = PlatformUtil.newClient();
 	
 	public ODataClient(OClientBehavior... behaviors) {
 		
@@ -184,11 +185,11 @@ public class ODataClient {
 		return true;
 	}
 	public boolean deleteEntity(ODataClientRequest request) {
-		ClientResponse response = doRequest(request,204);
+		ClientResponse response = doRequest(request,204,404);
 		return true;
 	}
 	
-	private ClientResponse doRequest(ODataClientRequest request, int expectedResponseStatus){ 
+	private ClientResponse doRequest(ODataClientRequest request, Integer... expectedResponseStatus){ 
 		
 		if (behaviors != null) {
 			for(OClientBehavior behavior : behaviors)
@@ -241,12 +242,13 @@ public class ODataClient {
 		if (DUMP_RESPONSE_HEADERS)
 			dumpHeaders(response);
 		int status = response.getStatus();
-		if (status != expectedResponseStatus){
-			throw new RuntimeException(String.format("Expected status %s, found %s:",expectedResponseStatus,status) + "\n" + response.getEntity(String.class));
+		for(int expStatus : expectedResponseStatus){
+			if (status == expStatus){
+				return response;
+			}
 		}
+		throw new RuntimeException(String.format("Expected status %s, found %s:",Enumerable.create(expectedResponseStatus).join(" or "),status) + "\n" + response.getEntity(String.class));
 		
-		
-		return response;
 	}
 	
 	private XMLEventReader2 doXmlRequest(ClientResponse response) throws Exception {
