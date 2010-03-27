@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+
 import com.sun.jersey.api.container.httpserver.HttpServerFactory;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
@@ -61,7 +62,6 @@ public class JerseyServer {
 	public void start(){
 		
 		try {
-		
 			DefaultResourceConfig c = new DefaultResourceConfig( Enumerable.create(this.resourceClasses).toArray(Class.class));
 			
 			
@@ -70,6 +70,7 @@ public class JerseyServer {
 			paf.put("com.sun.jersey.spi.container.ContainerResponseFilters",Enumerable.create(jerseyResponseFilters).toArray(String.class));
 			paf.put("com.sun.jersey.spi.container.ResourceFilters",Enumerable.create(jerseyResourceFilters).toArray(String.class));
 			c.setPropertiesAndFeatures(paf);
+
 			server = HttpServerFactory.create(baseUri,c);
 			
 			 Object tmp = CoreUtils.getFieldValue(server,"server",Object.class);

@@ -5,19 +5,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.ws.rs.ext.RuntimeDelegate;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.core.impl.provider.entity.StringProvider;
-import com.sun.jersey.core.impl.provider.header.MediaTypeProvider;
-import com.sun.jersey.core.spi.factory.AbstractRuntimeDelegate;
-import com.sun.jersey.spi.HeaderDelegateProvider;
-
 import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
 import odata4j.core.OProperty;
@@ -63,6 +50,10 @@ public class InternalUtil {
 		return "(" + keyValue + ")";
 	}
 	
+	private static Set<Class> integralTypes = Enumerable.create(
+			Integer.class,Integer.TYPE,Long.class,Long.TYPE,Short.class,Short.TYPE
+			).cast(Class.class).toSet();
+	
 	private static String keyString(Object key, boolean includePropName){
 		if (key instanceof UUID){
 			return "guid'" + key + "'";
@@ -71,12 +62,13 @@ public class InternalUtil {
 			return "'" + ((String)key).replace("'","''") + "'";
 
 		}
+		else if (integralTypes.contains(key.getClass())){
+			return key.toString();
+		}
 		else if (key instanceof OProperty<?>){
 			OProperty<?> oprop = (OProperty<?>)key;
-			String value = oprop.getValue().toString();
-			if (oprop.getType().equals(EdmType.STRING)){
-				value = "'" + value.replace("'", "''") +  "'";
-			}
+			String value = keyString(oprop.getValue(),false);
+			
 			if (includePropName)
 				return oprop.getName() + "="+ value;
 			else

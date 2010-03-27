@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Stack;
 
-import org.w3c.dom.Document;
-
 import odata4j.stax2.QName2;
 import odata4j.stax2.XMLWriter2;
 

@@ -12,7 +12,6 @@ import javax.xml.stream.events.XMLEvent;
 
 import odata4j.stax2.QName2;
 import odata4j.stax2.XMLWriter2;
-
 import core4j.Enumerable;
 
 public class StaxXMLWriter2 implements XMLWriter2 {

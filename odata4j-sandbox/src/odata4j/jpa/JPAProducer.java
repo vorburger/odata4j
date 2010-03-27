@@ -29,24 +29,34 @@ import odata4j.producer.EntitiesRequest;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityRequest;
 import odata4j.producer.EntityResponse;
-import odata4j.producer.ODataBackend;
+import odata4j.producer.ODataProducer;
 import odata4j.producer.QueryInfo;
 import core4j.Enumerable;
 import core4j.Func1;
 import core4j.Predicate1;
 
-public class JPABackend implements ODataBackend {
+public class JPAProducer implements ODataProducer {
 
 	private final EntityManagerFactory emf;
+	private final EntityManager em;
 	private final String namespace;
 	private final EdmDataServices metadata;
 	
-	public JPABackend(EntityManagerFactory emf, String namespace){
+	public JPAProducer(EntityManagerFactory emf, String namespace){
+		
 		this.emf = emf;
 		this.namespace = namespace;
 		
+		em = emf.createEntityManager();  // necessary for metamodel
 		this.metadata = EdmGenerator.buildEdm(emf, namespace);
 	}
+	
+	@Override
+	public void close() {
+		em.close();
+		emf.close();
+	}
+	
 	@Override
 	public EdmDataServices getMetadata() {
 		 return metadata;
@@ -266,6 +276,7 @@ public class JPABackend implements ODataBackend {
 		List<Object> results = tq.getResultList();
 		return Enumerable.create(results);
 	}
+	
 	
 	
 

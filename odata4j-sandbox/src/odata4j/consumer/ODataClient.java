@@ -13,7 +13,6 @@ import odata4j.core.OData;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmType;
 import odata4j.internal.InternalUtil;
-import odata4j.internal.PlatformUtil;
 import odata4j.stax2.Attribute2;
 import odata4j.stax2.QName2;
 import odata4j.stax2.StartElement2;
@@ -23,7 +22,6 @@ import odata4j.stax2.XMLEventWriter2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLInputFactory2;
 import odata4j.xml.AtomFeedWriter;
-
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -117,7 +115,7 @@ public class ODataClient {
 	private final OClientBehavior[] requiredBehaviors = new OClientBehavior[]{new MethodTunnelingBehavior("MERGE")};  // jersey hates MERGE, tunnel through POST
 	private final OClientBehavior[] behaviors;
 	
-	private final Client client = PlatformUtil.newClient();
+	private final Client client = ClientUtil.newClient();
 	
 	public ODataClient(OClientBehavior... behaviors) {
 		

@@ -8,7 +8,7 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/odata4j-sandbox/lib/jersey-client-1.1.5-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="lib/jersey-core-1.1.5.jar">
+	<classpathentry exported="true" kind="lib" path="lib/jersey-core-1.1.5.jar" sourcepath="lib/jersey-core-1.1.5-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/odata4j-sandbox/lib/jersey-core-1.1.5-javadoc.jar!/"/>
 		</attributes>
@@ -33,7 +33,7 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/odata4j-sandbox/lib/core4j-0.1-javadoc.jar!/doc/apidoc"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="lib/jersey-server-1.1.5.jar">
+	<classpathentry exported="true" kind="lib" path="lib/jersey-server-1.1.5.jar" sourcepath="lib/jersey-server-1.1.5-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/odata4j-sandbox/lib/jersey-server-1.1.5-javadoc.jar!/"/>
 		</attributes>

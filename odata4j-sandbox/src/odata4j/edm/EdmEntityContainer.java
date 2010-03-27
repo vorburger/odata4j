@@ -2,6 +2,8 @@ package odata4j.edm;
 
 import java.util.List;
 
+import core4j.Enumerable;
+
 public class EdmEntityContainer {
 
 	public final String name;
@@ -12,7 +14,7 @@ public class EdmEntityContainer {
 	public EdmEntityContainer(String name, boolean isDefault, List<EdmEntitySet> entitySets, List<EdmAssociationSet> associationSets){
 		this.name = name;
 		this.isDefault = isDefault;
-		this.entitySets = entitySets;
-		this.associationSets = associationSets;
+		this.entitySets = entitySets==null?Enumerable.empty(EdmEntitySet.class).toList():entitySets;
+		this.associationSets = associationSets==null?Enumerable.empty(EdmAssociationSet.class).toList():associationSets;
 	}
 }

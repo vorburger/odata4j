@@ -1,8 +1,5 @@
 package odata4j.internal;
 
-import com.sun.jersey.core.provider.AbstractMessageReaderWriterProvider;
-import com.sun.jersey.core.util.ReaderWriter;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,10 +8,14 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
+import com.sun.jersey.core.provider.AbstractMessageReaderWriterProvider;
+import com.sun.jersey.core.util.ReaderWriter;
 
 @Produces({"text/plain", "*/*"})
 @Consumes({"text/plain", "*/*"})

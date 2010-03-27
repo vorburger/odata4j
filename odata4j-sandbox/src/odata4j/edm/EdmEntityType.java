@@ -1,5 +1,6 @@
 package odata4j.edm;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class EdmEntityType {
@@ -14,8 +15,8 @@ public class EdmEntityType {
 		this.namespace = namespace;
 		this.name = name;
 		this.key = key;
-		this.properties = properties;
-		this.navigationProperties = navigationProperties;
+		this.properties = properties==null?new ArrayList<EdmProperty>():properties;
+		this.navigationProperties = navigationProperties==null?new ArrayList<EdmNavigationProperty>():navigationProperties;
 	}
 
 	public String getFQName() {

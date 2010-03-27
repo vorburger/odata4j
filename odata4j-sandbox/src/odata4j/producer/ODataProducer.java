@@ -1,33 +1,15 @@
 package odata4j.producer;
 
+import odata4j.edm.EdmDataServices;
 
-public class ODataProducer {
+public interface ODataProducer {
 
-	private static ODataProducer INSTANCE;
-	public static void setInstance(ODataProducer instance){
-		INSTANCE = instance;
-	}
+	public abstract EdmDataServices getMetadata();
 	
-	public static ODataProducer getInstance(){
-		return INSTANCE;
-	}
+	public abstract EntitiesResponse getEntities(EntitiesRequest request);
 	
+	public abstract EntityResponse getEntity(EntityRequest request);
 	
-	private final ODataBackend backend;
-	private final String baseUri;
-	
-	
-	public ODataProducer(String baseUri, ODataBackend backend ) {
-		this.baseUri = baseUri;
-		this.backend = backend;
-	}
-	
-	public ODataBackend getBackend(){
-		return backend;
-	}
-	
-	public String getBaseUri() {
-		return baseUri;
-	}
+	public abstract void close();
 	
 }

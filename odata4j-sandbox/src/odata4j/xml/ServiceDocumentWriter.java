@@ -2,8 +2,6 @@ package odata4j.xml;
 
 import java.io.Writer;
 
-import javax.xml.namespace.QName;
-
 import odata4j.edm.EdmDataServices;
 import odata4j.edm.EdmEntityContainer;
 import odata4j.edm.EdmEntitySet;
@@ -11,7 +9,6 @@ import odata4j.edm.EdmSchema;
 import odata4j.stax2.QName2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLWriter2;
-import odata4j.stax2.staximpl.StaxXMLWriter2;
 import core4j.Enumerable;
 import core4j.Funcs;
 

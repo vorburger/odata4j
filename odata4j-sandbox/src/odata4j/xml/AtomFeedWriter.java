@@ -4,7 +4,6 @@ import java.io.Writer;
 import java.util.List;
 
 import javax.ws.rs.core.MediaType;
-import javax.xml.namespace.QName;
 
 import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
@@ -18,7 +17,6 @@ import odata4j.producer.EntityResponse;
 import odata4j.stax2.QName2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLWriter2;
-import odata4j.stax2.staximpl.StaxXMLWriter2;
 
 import org.apache.commons.codec2.binary.Base64;
 import org.joda.time.DateTime;
@@ -122,7 +120,7 @@ public class AtomFeedWriter extends BaseWriter {
 		
 		String relid = null;
 		if (entityName != null) {
-			relid = entityName + "(" + key + ")";
+			relid = entityName + key;
 			String absid = baseUri + relid;
 			writeElement(writer,"id",absid);
 		}
@@ -178,6 +176,9 @@ public class AtomFeedWriter extends BaseWriter {
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
 			} else if (type == EdmType.INT16){
+				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
+				if (value != null) sValue = value.toString();
+			}else if (type == EdmType.INT64){
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
 			}else if (type == EdmType.BOOLEAN){

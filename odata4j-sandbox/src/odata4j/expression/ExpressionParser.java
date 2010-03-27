@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-
 import org.apache.commons.codec2.DecoderException;
 import org.apache.commons.codec2.binary.Hex;
 import org.joda.time.DateTime;

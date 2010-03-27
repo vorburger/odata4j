@@ -2,8 +2,6 @@ package odata4j.xml;
 
 import java.io.Writer;
 
-import javax.xml.namespace.QName;
-
 import odata4j.edm.EdmAssociation;
 import odata4j.edm.EdmAssociationSet;
 import odata4j.edm.EdmDataServices;
@@ -16,7 +14,6 @@ import odata4j.edm.EdmSchema;
 import odata4j.stax2.QName2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLWriter2;
-import odata4j.stax2.staximpl.StaxXMLWriter2;
 
 public class EdmxWriter extends BaseWriter {
 
