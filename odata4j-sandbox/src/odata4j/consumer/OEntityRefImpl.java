@@ -3,11 +3,11 @@ package odata4j.consumer;
 import java.util.ArrayList;
 import java.util.List;
 
-import odata4j.consumer.ODataClient.AtomEntry;
-import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntityRef;
 import odata4j.internal.EntitySegment;
 import odata4j.internal.InternalUtil;
+import odata4j.xml.AtomFeedParser.AtomEntry;
+import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 import core4j.Enumerable;
 
 public class OEntityRefImpl<T> implements OEntityRef<T>{

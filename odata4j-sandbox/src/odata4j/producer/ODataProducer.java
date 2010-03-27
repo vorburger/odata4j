@@ -12,4 +12,6 @@ public interface ODataProducer {
 	
 	public abstract void close();
 	
+	public abstract EntityResponse createEntity(CreateEntityRequest request);
+	
 }

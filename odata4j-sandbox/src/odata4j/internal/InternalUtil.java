@@ -1,14 +1,17 @@
 package odata4j.internal;
 
+import java.io.Reader;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
 import odata4j.core.OProperty;
-import odata4j.edm.EdmType;
+import odata4j.stax2.XMLEventReader2;
+import odata4j.stax2.XMLFactoryProvider2;
+import odata4j.stax2.XMLInputFactory2;
+import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 import core4j.Enumerable;
 import core4j.Func1;
 import core4j.Funcs;
@@ -16,6 +19,12 @@ import core4j.ThrowingFunc1;
 
 public class InternalUtil {
 
+	
+	public static XMLEventReader2 newXMLEventReader(Reader reader){
+		XMLInputFactory2 f = XMLFactoryProvider2.getInstance().newXMLInputFactory2();
+		return f.createXMLEventReader(reader);
+	}
+	
 	
 	public static String reflectionToString(final Object obj){
 		StringBuilder rt = new StringBuilder();

@@ -18,7 +18,6 @@ import odata4j.xml.AtomFeedWriter;
 import org.apache.commons.lang.StringUtils;
 
 import com.sun.jersey.api.core.HttpContext;
-import com.sun.jersey.spi.inject.Inject;
 
 @Path("{entityName}{id: (\\(.*\\))}")
 public class EntityRequestResource {

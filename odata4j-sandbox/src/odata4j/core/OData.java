@@ -8,6 +8,8 @@ import java.util.UUID;
 import odata4j.edm.EdmType;
 import odata4j.expression.ExpressionParser;
 
+import org.apache.commons.codec2.binary.Hex;
+import org.apache.commons.codec2.binary.Base64;
 import org.joda.time.LocalDateTime;
 
 public class OData {
@@ -48,7 +50,10 @@ public class OData {
 		} else if (EdmType.DECIMAL.toTypeString().equals(type)){
 			BigDecimal dValue =  value==null?null:new BigDecimal(value);
 			return OData.decimalProperty(name,dValue);
-		} else if (EdmType.DATETIME.toTypeString().equals(type)){
+		} else if (EdmType.BINARY.toTypeString().equals(type)){
+			byte[] bValue = new Base64().decode(value);
+			return OData.binaryProperty(name, bValue);
+		}else if (EdmType.DATETIME.toTypeString().equals(type)){
 			if (value != null && value.matches(".*\\.\\d{1,7}Z?$")) {
 				value= value.substring(0,value.lastIndexOf('.'));
 			}
@@ -137,6 +142,10 @@ public class OData {
 		
 		@Override
 		public String toString() {
+			Object value = this.value;
+			if (value instanceof byte[]){
+				value = "0x"+Hex.encodeHexString((byte[])value);
+			}
 			return String.format("OProperty[%s,%s,%s]",name,type,value);
 		}
 		

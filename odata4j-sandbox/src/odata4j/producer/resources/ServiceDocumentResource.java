@@ -8,12 +8,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import com.sun.jersey.api.core.HttpContext;
-import com.sun.jersey.spi.inject.Inject;
-
 import odata4j.edm.EdmDataServices;
 import odata4j.producer.ODataProducer;
 import odata4j.xml.ServiceDocumentWriter;
+
+import com.sun.jersey.api.core.HttpContext;
 
 @Path("")
 public class ServiceDocumentResource {

@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmEntitySet;
@@ -17,6 +16,7 @@ import odata4j.producer.EntityResponse;
 import odata4j.stax2.QName2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLWriter2;
+import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 
 import org.apache.commons.codec2.binary.Base64;
 import org.joda.time.DateTime;
@@ -25,7 +25,7 @@ import org.joda.time.LocalDateTime;
 
 public class AtomFeedWriter extends BaseWriter {
 
-	public static void generateResponseEntry(String baseUri, EntityResponse response, Writer w){
+	public static String generateResponseEntry(String baseUri, EntityResponse response, Writer w){
 		
 		EdmEntitySet ees = response.getEntitySet();
 		String entityName = ees.name;
@@ -41,8 +41,9 @@ public class AtomFeedWriter extends BaseWriter {
 		writer.writeAttribute("xml:base", baseUri);
 		
 		
-		writeEntry(writer,response.getEntity().getKeyProperties(),response.getEntity().getProperties(),entityName,baseUri,updated,ees);
+		String absId = writeEntry(writer,response.getEntity().getKeyProperties(),response.getEntity().getProperties(),entityName,baseUri,updated,ees);
 		writer.endDocument();
+		return absId;
 	}
 	
 	public static void generateRequestEntry(DataServicesAtomEntry request, Writer w){
@@ -101,7 +102,7 @@ public class AtomFeedWriter extends BaseWriter {
 
 
 
-	private static void writeEntry(XMLWriter2 writer, List<OProperty<?>> keyProperties, List<OProperty<?>> entityProperties, String entityName, String baseUri, String updated, EdmEntitySet ees){
+	private static String writeEntry(XMLWriter2 writer, List<OProperty<?>> keyProperties, List<OProperty<?>> entityProperties, String entityName, String baseUri, String updated, EdmEntitySet ees){
 		
 		String key = null;
 		if (keyProperties != null) {
@@ -119,9 +120,10 @@ public class AtomFeedWriter extends BaseWriter {
 		}
 		
 		String relid = null;
+		String absid = null;
 		if (entityName != null) {
 			relid = entityName + key;
-			String absid = baseUri + relid;
+			absid = baseUri + relid;
 			writeElement(writer,"id",absid);
 		}
 		
@@ -213,7 +215,7 @@ public class AtomFeedWriter extends BaseWriter {
 		
 		writer.endElement("properties");
 		writer.endElement("content");
-		
+		return absid;
 		
 	}
 	

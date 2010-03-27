@@ -1,5 +1,6 @@
 package odata4j.jpa;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ import odata4j.edm.EdmEntitySet;
 import odata4j.edm.EdmProperty;
 import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
+import odata4j.producer.CreateEntityRequest;
 import odata4j.producer.EntitiesRequest;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityRequest;
@@ -86,7 +88,7 @@ public class JPAProducer implements ODataProducer {
 	private class Context {
 		EdmDataServices metadata;
 		EdmEntitySet ees;
-		EntityType<?> entityType;
+		EntityType<?> jpaEntityType;
 		String keyPropertyName;
 		EntityManager em;
 		Object entityKey;
@@ -96,9 +98,9 @@ public class JPAProducer implements ODataProducer {
 	
 	private EntityResponse getEntity(final Context context){
 		
-		Object jpaEntity = context.em.find(context.entityType.getJavaType(), context.entityKey);
+		Object jpaEntity = context.em.find(context.jpaEntityType.getJavaType(), context.entityKey);
 		if (jpaEntity == null)
-			throw new RuntimeException(context.entityType.getJavaType()+" not found with key " + context.entityKey);
+			throw new RuntimeException(context.jpaEntityType.getJavaType()+" not found with key " + context.entityKey);
 		
 		final OEntity entity = makeEntity(context,jpaEntity);
 		return new EntityResponse(){
@@ -116,17 +118,20 @@ public class JPAProducer implements ODataProducer {
 		
 	}
 	
-	private OEntity makeEntity(final Context context, final Object jpaEntity){
+	private OEntity makeEntity(Context context, final Object jpaEntity){
+		return makeEntity(context.ees,context.jpaEntityType,context.keyPropertyName,jpaEntity);
+	}
+	private OEntity makeEntity(final EdmEntitySet ees, final EntityType<?> jpaEntityType, final String keyPropertyName,  final Object jpaEntity){
 		return new OEntity(){
 			public List<OProperty<?>> getProperties() {
-				return jpaEntityToOProperties(context.ees, context.entityType, jpaEntity);
+				return jpaEntityToOProperties(ees, jpaEntityType, jpaEntity);
 			}
 
 			@Override
 			public List<OProperty<?>> getKeyProperties() {
 				return Enumerable.create(getProperties()).where(new Predicate1<OProperty<?>>(){
 					public boolean apply(OProperty<?> input) {
-						return input.getName().equals(context.keyPropertyName);
+						return input.getName().equals(keyPropertyName);
 					}}).toList();
 			}};
 	}
@@ -134,7 +139,7 @@ public class JPAProducer implements ODataProducer {
 	
 	private EntitiesResponse getEntities(final Context context){
 		
-		Enumerable<Object> entityObjects =enumDynamicEntities(context.em,context.entityType.getJavaType(),context.query);
+		Enumerable<Object> entityObjects =enumDynamicEntities(context.em,context.jpaEntityType.getJavaType(),context.query);
 		final List<OEntity> entities = entityObjects.select(new Func1<Object,OEntity>(){
 			public OEntity apply(final Object input) {
 				return makeEntity(context,input);
@@ -159,7 +164,7 @@ public class JPAProducer implements ODataProducer {
 		try {
 			context.metadata = getMetadata();
 			context.ees = findEdmEntitySet(metadata, entityName);
-			context.entityType = findEntityType(context.em,entityName);
+			context.jpaEntityType = findEntityType(context.em,entityName);
 			context.keyPropertyName = context.ees.type.key;
 			context.entityKey = entityKey;
 			context.query = query;
@@ -275,6 +280,71 @@ public class JPAProducer implements ODataProducer {
 		
 		List<Object> results = tq.getResultList();
 		return Enumerable.create(results);
+	}
+
+	private static EdmProperty findProperty(EdmEntitySet ees, final String name){
+		return Enumerable.create(ees.type.properties).first(new Predicate1<EdmProperty>(){
+			public boolean apply(EdmProperty input) {
+				return input.name.equals(name);
+			}});
+	}
+	private static Object toJPAEntity(EdmEntitySet ees, EntityType<?> jpaEntityType, List<OProperty<?>> properties){
+		try {
+			Constructor<?> ctor = jpaEntityType.getJavaType().getDeclaredConstructor();
+			ctor.setAccessible(true);
+			Object jpaEntity = ctor.newInstance();
+			
+			
+			for(OProperty<?> prop : properties){
+				//EdmProperty ep = findProperty(ees,prop.getName());
+				Attribute<?,?> att = jpaEntityType.getAttribute(prop.getName());
+				Member member = att.getJavaMember();
+				
+				if (!(member instanceof Field))
+					throw new UnsupportedOperationException("Implement member" + member);
+				Field field = (Field)member;
+				field.setAccessible(true);
+				field.set(jpaEntity, prop.getValue());
+				
+			}
+			
+			return jpaEntity;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} 
+	}
+	
+	
+	@Override
+	public EntityResponse createEntity(CreateEntityRequest request) {
+		String entityName = request.getEntityName();
+		final EdmEntitySet ees = findEdmEntitySet(metadata, entityName);
+		
+		EntityManager em = emf.createEntityManager();
+		try {
+			em.getTransaction().begin();
+			EntityType<?> jpaEntityType = findEntityType(em, entityName);
+			Object jpaEntity = toJPAEntity(ees, jpaEntityType, request.getProperties());
+			em.persist(jpaEntity);
+			em.getTransaction().commit();
+			
+			final OEntity responseEntity = makeEntity(ees, jpaEntityType, null, jpaEntity);
+			
+			return new EntityResponse(){
+
+				@Override
+				public OEntity getEntity() {
+					return responseEntity;
+				}
+
+				@Override
+				public EdmEntitySet getEntitySet() {
+					return ees;
+				}};
+			
+		} finally {
+			em.close();
+		}
 	}
 	
 	

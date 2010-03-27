@@ -6,13 +6,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import odata4j.consumer.ODataClient.AtomEntry;
-import odata4j.consumer.ODataClient.AtomFeed;
-import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
 import odata4j.core.OQuery;
 import odata4j.internal.EntitySegment;
 import odata4j.internal.InternalUtil;
+import odata4j.xml.AtomFeedParser.AtomEntry;
+import odata4j.xml.AtomFeedParser.AtomFeed;
+import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 import core4j.Enumerable;
 import core4j.Func;
 import core4j.Func1;

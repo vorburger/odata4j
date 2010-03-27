@@ -5,11 +5,11 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OEntity;
 import odata4j.core.OModify;
 import odata4j.core.OProperty;
 import odata4j.internal.EntitySegment;
+import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 import core4j.Enumerable;
 import core4j.Predicate1;
 

@@ -5,11 +5,11 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import odata4j.consumer.ODataClient.DataServicesAtomEntry;
 import odata4j.core.OCreate;
 import odata4j.core.OEntity;
 import odata4j.core.OProperty;
 import odata4j.internal.InternalUtil;
+import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 
 public class OCreateImpl<T> implements OCreate<T> {
 
