@@ -13,6 +13,7 @@ import odata4j.stax2.QName2;
 import odata4j.stax2.StartElement2;
 import odata4j.stax2.XMLEvent2;
 import odata4j.stax2.XMLEventReader2;
+import odata4j.stax2.XMLEventWriter2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLInputFactory2;
 import odata4j.stax2.XMLOutputFactory2;
@@ -37,13 +38,39 @@ public class DomXMLFactoryProvider2 extends XMLFactoryProvider2 {
 
 	@Override
 	public XMLOutputFactory2 newXMLOutputFactory2() {
-		throw new UnsupportedOperationException();
+		return new DomXMLOutputFactory2();
 	}
+	
+	
 
 	@Override
 	public XMLWriterFactory2 newXMLWriterFactory2() {
 		return new DomXMLWriterFactory2();
 	}
+	
+	
+	private static class DomXMLOutputFactory2 implements XMLOutputFactory2{
+
+		@Override
+		public XMLEventWriter2 createXMLEventWriter(Writer writer) {
+			return new DomXMLEventWriter2(writer);
+		}
+		
+	}
+	private static class DomXMLEventWriter2 implements XMLEventWriter2{
+
+		private final Writer writer;
+		public DomXMLEventWriter2(Writer writer){
+			this.writer = writer;
+		}
+		@Override
+		public void add(XMLEvent2 event) {
+			throw new UnsupportedOperationException();
+			
+		}
+		
+	}
+	
 	
 	private static class DomXMLWriterFactory2 implements XMLWriterFactory2{
 

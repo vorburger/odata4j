@@ -1,5 +1,6 @@
 package odata4j.edm;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class EdmDataServices {
@@ -20,6 +21,14 @@ public class EdmDataServices {
 			}
 		}
 		throw new RuntimeException("EdmEntitySet " + entitySetName + " not found");
+	}
+
+	public Iterable<EdmEntityType> getEntityTypes() {
+		List<EdmEntityType> rt = new ArrayList<EdmEntityType>();
+		for (EdmSchema schema : this.schemas) {
+			rt.addAll(schema.entityTypes);
+		}
+		return rt;
 	}
 	
 }

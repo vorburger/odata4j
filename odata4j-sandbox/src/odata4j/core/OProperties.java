@@ -15,6 +15,9 @@ import org.joda.time.LocalDateTime;
 public class OProperties {
 
 	
+	public static <T> OProperty<?> simple(String name, EdmType type, T value){
+		return new PropertyImpl<T>(name,type,value);
+	}
 	public static OProperty<?> null_(String name, String type){
 		return new PropertyImpl<Object>(name, EdmType.get(type), null);	
 	}
