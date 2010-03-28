@@ -29,7 +29,7 @@ public class JerseyServer {
 	private final List<String> jerseyRequestFilters = new ArrayList<String>();
 	private final List<String> jerseyResponseFilters = new ArrayList<String>();
 	private final List<String> jerseyResourceFilters = new ArrayList<String>();
-	private final List<Class> resourceClasses = new ArrayList<Class>();
+	private final List<Class<?>> resourceClasses = new ArrayList<Class<?>>();
 	
 	
 	public JerseyServer(String baseUri){
@@ -58,10 +58,11 @@ public class JerseyServer {
 		server.stop(0);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void start(){
 		
 		try {
-			DefaultResourceConfig c = new DefaultResourceConfig( Enumerable.create(this.resourceClasses).toArray(Class.class));
+			DefaultResourceConfig c = new DefaultResourceConfig( Enumerable.create(this.resourceClasses).cast(Object.class).cast(Class.class).toArray(Class.class));
 			
 			
 			Map<String,Object> paf = new HashMap<String,Object>();

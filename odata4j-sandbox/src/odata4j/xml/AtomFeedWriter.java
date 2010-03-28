@@ -28,7 +28,7 @@ public class AtomFeedWriter extends BaseWriter {
 	public static String generateResponseEntry(String baseUri, EntityResponse response, Writer w){
 		
 		EdmEntitySet ees = response.getEntitySet();
-		String entityName = ees.name;
+		String entitySetName = ees.name;
 		DateTime utc = new DateTime().withZone(DateTimeZone.UTC); 
 		String updated = toString(utc);
 		
@@ -41,7 +41,7 @@ public class AtomFeedWriter extends BaseWriter {
 		writer.writeAttribute("xml:base", baseUri);
 		
 		
-		String absId = writeEntry(writer,response.getEntity().getKeyProperties(),response.getEntity().getProperties(),entityName,baseUri,updated,ees);
+		String absId = writeEntry(writer,response.getEntity().getKeyProperties(),response.getEntity().getProperties(),entitySetName,baseUri,updated,ees);
 		writer.endDocument();
 		return absId;
 	}
@@ -69,7 +69,7 @@ public class AtomFeedWriter extends BaseWriter {
 	public static void generateFeed(String baseUri, EntitiesResponse response, Writer w){
 		
 		EdmEntitySet ees = response.getEntitySet();
-		String entityName = ees.name;
+		String entitySetName = ees.name;
 		DateTime utc = new DateTime().withZone(DateTimeZone.UTC); 
 		String updated = toString(utc);
 		
@@ -82,17 +82,17 @@ public class AtomFeedWriter extends BaseWriter {
 		writer.writeNamespace("d", d);
 		writer.writeAttribute("xml:base", baseUri);
 		
-		writeElement(writer, "title", entityName,"type","text");
-		writeElement(writer,"id",baseUri + entityName);
+		writeElement(writer, "title", entitySetName,"type","text");
+		writeElement(writer,"id",baseUri + entitySetName);
 		
 		
 		writeElement(writer,"updated",updated);
 		
-		writeElement(writer,"link",null,"rel","self","title",entityName,"href",entityName);
+		writeElement(writer,"link",null,"rel","self","title",entitySetName,"href",entitySetName);
 		
 		for(OEntity entity : response.getEntities()){
 			writer.startElement("entry");
-			writeEntry(writer,entity.getKeyProperties(),entity.getProperties(),entityName,baseUri,updated,ees);
+			writeEntry(writer,entity.getKeyProperties(),entity.getProperties(),entitySetName,baseUri,updated,ees);
 			writer.endElement("entry");
 		}
 		writer.endDocument();
@@ -102,7 +102,7 @@ public class AtomFeedWriter extends BaseWriter {
 
 
 
-	private static String writeEntry(XMLWriter2 writer, List<OProperty<?>> keyProperties, List<OProperty<?>> entityProperties, String entityName, String baseUri, String updated, EdmEntitySet ees){
+	private static String writeEntry(XMLWriter2 writer, List<OProperty<?>> keyProperties, List<OProperty<?>> entityProperties, String entitySetName, String baseUri, String updated, EdmEntitySet ees){
 		
 		String key = null;
 		if (keyProperties != null) {
@@ -121,8 +121,8 @@ public class AtomFeedWriter extends BaseWriter {
 		
 		String relid = null;
 		String absid = null;
-		if (entityName != null) {
-			relid = entityName + key;
+		if (entitySetName != null) {
+			relid = entitySetName + key;
 			absid = baseUri + relid;
 			writeElement(writer,"id",absid);
 		}
@@ -134,8 +134,8 @@ public class AtomFeedWriter extends BaseWriter {
 		writeElement(writer,"name",null);
 		writer.endElement("author");
 		
-		if (entityName != null) 
-			writeElement(writer,"link",null,"rel","edit","title",entityName,"href",relid);
+		if (entitySetName != null) 
+			writeElement(writer,"link",null,"rel","edit","title",entitySetName,"href",relid);
 		
 		
 		if (ees != null) {

@@ -22,12 +22,13 @@ public class ClientUtil {
 		
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void androidJerseyClientHack(){
 	 try  {
 	        RuntimeDelegate rd = RuntimeDelegate.getInstance();
 	        Field f = AbstractRuntimeDelegate.class.getDeclaredField("hps");
 	        f.setAccessible(true);
-	        Set<HeaderDelegateProvider> hps =    (Set<HeaderDelegateProvider>) f.get(rd);
+	        Set<HeaderDelegateProvider<?>> hps =    (Set<HeaderDelegateProvider<?>>) f.get(rd);
 	        hps.clear();
 	        hps.add(new MediaTypeProvider());
 

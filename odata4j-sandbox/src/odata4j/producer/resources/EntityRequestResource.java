@@ -24,7 +24,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.sun.jersey.api.core.HttpContext;
 
-@Path("{entityName}{id: (\\(.*\\))}")
+@Path("{entitySetName}{id: (\\(.*\\))}")
 public class EntityRequestResource extends BaseResource {
 
 	private static final Logger log = Logger.getLogger(EntityRequestResource.class.getName());
@@ -33,16 +33,16 @@ public class EntityRequestResource extends BaseResource {
 	public Response updateEntity(
 			@Context HttpContext context,
 			@Context ODataProducer producer,
-			final @PathParam("entityName") String entityName, 
+			final @PathParam("entitySetName") String entitySetName, 
 			@PathParam("id") String id){
 		
-		log.info(String.format("updateEntity(%s,%s)",entityName,id));
+		log.info(String.format("updateEntity(%s,%s)",entitySetName,id));
 		
 		List<OProperty<?>> properties = this.getRequestEntityProperties(context.getRequest());
 		
 		Object idObject = idObject(id);
 		
-		producer.updateEntity(entityName, idObject, properties);
+		producer.updateEntity(entitySetName, idObject, properties);
 		
 		return Response.ok().header("DataServiceVersion","1.0").build();
 	}
@@ -51,19 +51,19 @@ public class EntityRequestResource extends BaseResource {
 	public Response mergeEntity(
 			@Context HttpContext context,
 			@Context ODataProducer producer,
-			final @PathParam("entityName") String entityName, 
+			final @PathParam("entitySetName") String entitySetName, 
 			@PathParam("id") String id){
 		
 		if (!"MERGE".equals(context.getRequest().getHeaderValue(ODataConstants.Headers.X_HTTP_METHOD)))
 			throw new RuntimeException("Expected a tunnelled MERGE");
 			
-		log.info(String.format("mergeEntity(%s,%s)",entityName,id));
+		log.info(String.format("mergeEntity(%s,%s)",entitySetName,id));
 		
 		List<OProperty<?>> properties = this.getRequestEntityProperties(context.getRequest());
 		
 		Object idObject = idObject(id);
 		
-		producer.mergeEntity(entityName, idObject, properties);
+		producer.mergeEntity(entitySetName, idObject, properties);
 		
 		return Response.ok().header("DataServiceVersion","1.0").build();
 	}
@@ -73,16 +73,48 @@ public class EntityRequestResource extends BaseResource {
 	public Response deleteEntity(
 			@Context HttpContext context,
 			@Context ODataProducer producer,
-			final @PathParam("entityName") String entityName, 
+			final @PathParam("entitySetName") String entitySetName, 
 			@PathParam("id") String id){
-		log.info(String.format("getEntity(%s,%s)",entityName,id));
+		
+		log.info(String.format("getEntity(%s,%s)",entitySetName,id));
 		
 		Object idObject = idObject(id);
 		
-		producer.deleteEntity(entityName, idObject);
+		producer.deleteEntity(entitySetName, idObject);
 		
 		return Response.ok().header("DataServiceVersion","1.0").build();
 	}
+	
+	@GET
+	@Produces(ODataConstants.APPLICATION_ATOM_XML_CHARSET)
+	public Response getEntity(
+			@Context HttpContext context,
+			@Context ODataProducer producer,
+			final @PathParam("entitySetName") String entitySetName, 
+			@PathParam("id") String id){
+		
+		log.info(String.format("getEntity(%s,%s)",entitySetName,id));
+		
+		Object idObject =idObject(id);
+			
+		EntityResponse response = producer.getEntity(entitySetName,idObject);
+		
+		String baseUri = context.getUriInfo().getBaseUri().toString();
+		StringWriter sw = new StringWriter();
+		AtomFeedWriter.generateResponseEntry(baseUri,response,sw);
+		String entity = sw.toString();
+		
+		return Response.ok(entity,ODataConstants.APPLICATION_ATOM_XML_CHARSET).header("DataServiceVersion","1.0").build();
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	private Object idObject(String id){
 		String cleanid = null;
@@ -102,29 +134,6 @@ public class EntityRequestResource extends BaseResource {
 			idObject = Integer.parseInt(cleanid);
 		}
 		return idObject;
-	}
-	
-	@GET
-	@Produces(ODataConstants.APPLICATION_ATOM_XML_CHARSET)
-	public Response getEntity(
-			@Context HttpContext context,
-			@Context ODataProducer producer,
-			final @PathParam("entityName") String entityName, 
-			@PathParam("id") String id){
-		
-		log.info(String.format("getEntity(%s,%s)",entityName,id));
-		
-		Object idObject =idObject(id);
-			
-		EntityResponse response = producer.getEntity(entityName,idObject);
-		
-		String baseUri = context.getUriInfo().getBaseUri().toString();
-		StringWriter sw = new StringWriter();
-		AtomFeedWriter.generateResponseEntry(baseUri,response,sw);
-		String entity = sw.toString();
-		
-		return Response.ok(entity,ODataConstants.APPLICATION_ATOM_XML_CHARSET).header("DataServiceVersion","1.0").build();
-		
 	}
 	
 

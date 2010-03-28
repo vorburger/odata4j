@@ -65,7 +65,7 @@ public class StaxXMLWriter2 implements XMLWriter2 {
 	public void startElement(QName2 qname, String xmlns) {
 		//writer.setDefaultNamespace("http://www.example.com/ns1");
 	    try {
-	    	Iterator nsIterator = null;
+	    	Iterator<?> nsIterator = null;
 	    	if (xmlns != null){
 	    		nsIterator = Enumerable.create( eventFactory.createNamespace(xmlns)).iterator();
 	    	}

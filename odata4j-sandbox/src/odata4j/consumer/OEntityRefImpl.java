@@ -34,6 +34,7 @@ public class OEntityRefImpl<T> implements OEntityRef<T>{
 		return this;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public T execute() {
 		
@@ -41,7 +42,7 @@ public class OEntityRefImpl<T> implements OEntityRef<T>{
 		
 	    if (isDelete){
 	    	ODataClientRequest request = ODataClientRequest.delete(serviceRootUri + path);
-	    	boolean rt = client.deleteEntity(request);
+	    	client.deleteEntity(request);
 	    	return null;
 	    	
 	    } else {

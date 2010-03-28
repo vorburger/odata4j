@@ -24,6 +24,7 @@ public class OCreateImpl<T> implements OCreate<T> {
 		this.serviceRootUri = serviceRootUri;
 		this.entitySetName = entitySetName;
 	}
+	@SuppressWarnings("unchecked")
 	@Override
 	public T execute() {
 		

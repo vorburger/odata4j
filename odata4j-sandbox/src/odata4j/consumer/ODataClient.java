@@ -101,11 +101,11 @@ public class ODataClient {
 	}
 	
 	public boolean updateEntity(ODataClientRequest request) {
-		ClientResponse response = doRequest(request,200,204);
+		doRequest(request,200,204);
 		return true;
 	}
 	public boolean deleteEntity(ODataClientRequest request) {
-		ClientResponse response = doRequest(request,200,204,404);
+		doRequest(request,200,204,404);
 		return true;
 	}
 	

@@ -37,7 +37,7 @@ public class EdmGenerator {
 
 	
 	
-	public static EdmType toEdmType(SingularAttribute sa){
+	public static EdmType toEdmType(SingularAttribute<?,?> sa){
 		
 		Class<?> javaType = sa.getType().getJavaType();
 		
@@ -61,7 +61,7 @@ public class EdmGenerator {
 		throw new UnsupportedOperationException(javaType.toString());
 	}
 	
-    private static EdmProperty toEdmProperty(SingularAttribute sa){
+    private static EdmProperty toEdmProperty(SingularAttribute<?,?> sa){
     	String name = sa.getName();
     	EdmType type = toEdmType(sa);
     	boolean nullable = sa.isOptional();
@@ -94,19 +94,19 @@ public class EdmGenerator {
 		
 		for(EntityType<?> et : mm.getEntities()){
 			
-			SingularAttribute idAttribute = et.getId(null);
+			SingularAttribute<?,?> idAttribute = et.getId(null);
 			
 			String name = et.getName();
 			String key = idAttribute.getName();
 			List<EdmProperty> properties = new ArrayList<EdmProperty>();
 			List<EdmNavigationProperty> navigationProperties = new ArrayList<EdmNavigationProperty>();
 			
-			for(Attribute att : et.getAttributes()){
+			for(Attribute<?,?> att : et.getAttributes()){
 				
 				if (att.isCollection()){
 					 
 				} else {
-					SingularAttribute sa = (SingularAttribute)att;
+					SingularAttribute<?,?> sa = (SingularAttribute<?,?>)att;
 					
 					Type<?> type = sa.getType();
 					if (!type.getPersistenceType().equals(PersistenceType.ENTITY)){
@@ -147,15 +147,15 @@ public class EdmGenerator {
 		
 		for(EntityType<?> et2 : mm.getEntities()){
 			
-			for(Attribute att : et2.getAttributes()){
+			for(Attribute<?,?> att : et2.getAttributes()){
 				
 				if (att.isCollection()){
 					 
-					CollectionAttribute ca = (CollectionAttribute)att;
+					///CollectionAttribute<?,?> ca = (CollectionAttribute<?,?>)att;
 					
 					
 				} else {
-					SingularAttribute sa = (SingularAttribute)att;
+					SingularAttribute<?,?> sa = (SingularAttribute<?,?>)att;
 					
 					Type<?> type = sa.getType();
 					if (type.getPersistenceType().equals(PersistenceType.ENTITY)){
@@ -202,11 +202,11 @@ public class EdmGenerator {
 		
 		for(EntityType<?> et3 : mm.getEntities()){
 			
-			for(Attribute att : et3.getAttributes()){
+			for(Attribute<?,?> att : et3.getAttributes()){
 				
 				if (att.isCollection()){
 					 
-					CollectionAttribute ca = (CollectionAttribute)att;
+					CollectionAttribute<?,?> ca = (CollectionAttribute<?,?>)att;
 					
 					EntityType<?> cat =(EntityType<?>) ca.getElementType();
 					

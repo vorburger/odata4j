@@ -176,7 +176,7 @@ public class OQueryImpl<T> implements OQuery<T> {
 				
 				
 				int page = Integer.parseInt(request.getQueryParams().get("$page"));
-				int itemsPerPage = Integer.parseInt(request.getQueryParams().get("$itemsPerPage"));
+				//int itemsPerPage = Integer.parseInt(request.getQueryParams().get("$itemsPerPage"));
 				
 				request = request.queryParam("$page", Integer.toString(page+1));
 				

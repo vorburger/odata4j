@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import odata4j.core.OData;
+import odata4j.core.OProperties;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmType;
 import odata4j.internal.InternalUtil;
@@ -189,9 +189,9 @@ public class AtomFeedParser {
 				}
 				
 				if (isComplexType){
-					op = OData.complex(name, type,  isNull?null:Enumerable.create( parseProperties(reader,event.asStartElement())).toList());
+					op = OProperties.complex(name, type,  isNull?null:Enumerable.create( parseProperties(reader,event.asStartElement())).toList());
 				} else {
-					op = OData.parseProperty(name,type, isNull?null:reader.getElementText());
+					op = OProperties.parse(name,type, isNull?null:reader.getElementText());
 				}
 				rt.add(op);
 				

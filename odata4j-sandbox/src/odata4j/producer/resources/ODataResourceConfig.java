@@ -6,8 +6,7 @@ public class ODataResourceConfig extends DefaultResourceConfig {
 
 	public ODataResourceConfig() {
 		super(EntitiesRequestResource.class,EntityRequestResource.class,MetadataResource.class,ServiceDocumentResource.class,
-				
-				ODataProducerProvider.class);
+			ODataProducerProvider.class);
 		
 		
 	}

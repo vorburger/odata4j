@@ -1,6 +1,5 @@
 package odata4j.producer.resources;
 
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.List;
@@ -17,27 +16,20 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import odata4j.core.ODataConstants;
-import odata4j.core.OEntity;
 import odata4j.core.OProperty;
 import odata4j.expression.BoolCommonExpression;
 import odata4j.expression.CommonExpression;
 import odata4j.expression.ExpressionParser;
 import odata4j.expression.OrderByExpression;
-import odata4j.internal.InternalUtil;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityResponse;
 import odata4j.producer.ODataProducer;
 import odata4j.producer.QueryInfo;
-import odata4j.stax2.XMLEventReader2;
-import odata4j.xml.AtomFeedParser;
 import odata4j.xml.AtomFeedWriter;
-import odata4j.xml.AtomFeedParser.AtomEntry;
-import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 
 import com.sun.jersey.api.core.HttpContext;
-import com.sun.jersey.api.core.HttpRequestContext;
 
-@Path("{entityName}")
+@Path("{entitySetName}")
 public class EntitiesRequestResource extends BaseResource {
 
 	private static final Logger log = Logger.getLogger(EntitiesRequestResource.class.getName());
@@ -48,13 +40,13 @@ public class EntitiesRequestResource extends BaseResource {
 	public Response createEntity(
 			@Context HttpContext context,
 			@Context ODataProducer producer,
-			final @PathParam("entityName") String entityName){
+			final @PathParam("entitySetName") String entitySetName){
 		
-		log.info(String.format("createEntity(%s)",entityName));
+		log.info(String.format("createEntity(%s)",entitySetName));
 		
 		List<OProperty<?>> properties = this.getRequestEntityProperties(context.getRequest());
 
-		EntityResponse response = producer.createEntity(entityName,properties);
+		EntityResponse response = producer.createEntity(entitySetName,properties);
 		
 		String baseUri = context.getUriInfo().getBaseUri().toString();
 		StringWriter sw = new StringWriter();
@@ -74,18 +66,18 @@ public class EntitiesRequestResource extends BaseResource {
 	public Response getEntities(
 			@Context HttpContext context,
 			@Context ODataProducer producer,
-			final @PathParam("entityName") String entityName, 
+		    @PathParam("entitySetName") String entitySetName, 
 			@QueryParam("$top") String top, 
 			@QueryParam("$skip") String skip,
 			@QueryParam("$filter") String filter,
 			@QueryParam("$orderby") String orderBy){
 		
-		log.info(String.format("getEntities(%s,%s,%s,%s,%s)",entityName,top,skip,filter,orderBy));
+		log.info(String.format("getEntities(%s,%s,%s,%s,%s)",entitySetName,top,skip,filter,orderBy));
 		
 		final QueryInfo finalQuery = new QueryInfo(parseTop(top),parseSkip(skip),parseFilter(filter),parseOrderBy(orderBy));
 		
 		
-		EntitiesResponse response = producer.getEntities(entityName,finalQuery);
+		EntitiesResponse response = producer.getEntities(entitySetName,finalQuery);
 		
 		String baseUri = context.getUriInfo().getBaseUri().toString();
 		StringWriter sw = new StringWriter();

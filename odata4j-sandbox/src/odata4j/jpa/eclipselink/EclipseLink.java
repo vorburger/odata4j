@@ -15,10 +15,10 @@ import core4j.CoreUtils;
 
 public class EclipseLink {
 
-	public static Map<String,Object> getPropertyInfo(SingularAttribute sa, EdmType type){
+	public static Map<String,Object> getPropertyInfo(SingularAttribute<?,?> sa, EdmType type){
 		
 		Map<String,Object> rt = new HashMap<String,Object>();
-		 AttributeImpl ai = (AttributeImpl)sa;
+		 AttributeImpl<?,?> ai = (AttributeImpl<?,?>)sa;
 		  DatabaseMapping dm = CoreUtils.getFieldValue(ai,"mapping",DatabaseMapping.class);
 		 
 		  DatabaseField df = dm.getField();
