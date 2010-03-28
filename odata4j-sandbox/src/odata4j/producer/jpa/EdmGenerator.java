@@ -1,4 +1,4 @@
-package odata4j.jpa;
+package odata4j.producer.jpa;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import odata4j.edm.EdmNavigationProperty;
 import odata4j.edm.EdmProperty;
 import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
-import odata4j.jpa.eclipselink.EclipseLink;
+import odata4j.producer.jpa.eclipselink.EclipseLink;
 import core4j.Enumerable;
 import core4j.Func1;
 import core4j.Predicate1;

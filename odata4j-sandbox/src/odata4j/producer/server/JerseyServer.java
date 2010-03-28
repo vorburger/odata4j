@@ -1,4 +1,4 @@
-package odata4j.server;
+package odata4j.producer.server;
 
 import java.io.IOException;
 import java.util.ArrayList;

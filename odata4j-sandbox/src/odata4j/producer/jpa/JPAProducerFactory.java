@@ -1,4 +1,4 @@
-package odata4j.jpa;
+package odata4j.producer.jpa;
 
 import java.util.Properties;
 

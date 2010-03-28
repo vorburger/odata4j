@@ -1,4 +1,4 @@
-package odata4j.jpa.eclipselink;
+package odata4j.producer.jpa.eclipselink;
 
 import java.util.HashMap;
 import java.util.Map;
