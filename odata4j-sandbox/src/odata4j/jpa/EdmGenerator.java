@@ -170,7 +170,10 @@ public class EdmGenerator {
 						
 						String assocName= String.format("FK_%s_%s",eet1.name,eet2.name);
 						EdmAssociationEnd assocEnd1 = new EdmAssociationEnd(eet1.name,eet1,m1);
-						EdmAssociationEnd assocEnd2 = new EdmAssociationEnd(eet2.name,eet2,m2);
+						String assocEnd2Name = eet2.name;
+						if (assocEnd2Name.equals(eet1.name))
+							assocEnd2Name = assocEnd2Name + "1";
+						EdmAssociationEnd assocEnd2 = new EdmAssociationEnd(assocEnd2Name,eet2,m2);
 						EdmAssociation assoc = new EdmAssociation(modelNamespace,assocName,assocEnd1,assocEnd2);
 						
 						associations.add(assoc);

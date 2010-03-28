@@ -50,6 +50,8 @@ public class OEntityRefImpl<T> implements OEntityRef<T>{
 			ODataClientRequest request = ODataClientRequest.get(serviceRootUri + path);
 			
 			AtomEntry entry = client.getEntity(request);
+			if (entry==null)
+				return null;
 			DataServicesAtomEntry dsae = (DataServicesAtomEntry)entry;
 			
 			return (T) InternalUtil.toEntity(dsae);

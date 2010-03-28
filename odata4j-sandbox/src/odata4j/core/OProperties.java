@@ -32,6 +32,9 @@ public class OProperties {
 		} else if (EdmType.BOOLEAN.toTypeString().equals(type)){
 			Boolean bValue = value==null?null:Boolean.parseBoolean(value);
 			return OProperties.boolean_(name,bValue);
+		} else if (EdmType.BYTE.toTypeString().equals(type)){
+			Byte bValue = value==null?null:Byte.parseByte(value);
+			return OProperties.byte_(name,bValue);
 		} else if (EdmType.INT16.toTypeString().equals(type)){
 			Short sValue = value==null?null:Short.parseShort(value);
 			return OProperties.int16(name,sValue);
@@ -112,7 +115,9 @@ public class OProperties {
 	public static OProperty<byte[]> binary(String name, byte[] value){
 		return new PropertyImpl<byte[]>(name, EdmType.BINARY, value);
 	}
-	
+	public static OProperty<Byte> byte_(String name, byte value) {
+		return new PropertyImpl<Byte>(name,EdmType.BYTE,value);
+	}
 	
 	private static class PropertyImpl<T> implements OProperty<T> {
 
@@ -150,4 +155,7 @@ public class OProperties {
 		}
 		
 	}
+
+
+	
 }

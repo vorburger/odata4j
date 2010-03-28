@@ -10,4 +10,16 @@ public class EdmDataServices {
 		this.schemas = schemas;
 	}
 	
+	public EdmEntitySet getEdmEntitySet(String entitySetName) {
+		for (EdmSchema schema : this.schemas) {
+			for (EdmEntityContainer eec : schema.entityContainers) {
+				for (EdmEntitySet ees : eec.entitySets) {
+					if (ees.name.equals(entitySetName))
+						return ees;
+				}
+			}
+		}
+		throw new RuntimeException("EdmEntitySet " + entitySetName + " not found");
+	}
+	
 }

@@ -177,32 +177,53 @@ public class AtomFeedWriter extends BaseWriter {
 			if (type == EdmType.INT32){
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
-			} else if (type == EdmType.INT16){
+			}
+			else if (type == EdmType.INT16){
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
-			}else if (type == EdmType.INT64){
+			}
+			else if (type == EdmType.INT64){
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
-			}else if (type == EdmType.BOOLEAN){
+			}
+			else if (type == EdmType.BOOLEAN){
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
-			}else if (type == EdmType.DECIMAL){
+			}
+			else if (type == EdmType.BYTE){
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
-			} else if (type == EdmType.STRING){
+			}
+			else if (type == EdmType.DECIMAL){
+				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				if (value != null) sValue = value.toString();
-			}else if (type == EdmType.DATETIME){
+			}
+			else if (type == EdmType.SINGLE){
+				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
+				if (value != null) sValue = value.toString();
+			}
+			else if (type == EdmType.DOUBLE){
+				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
+				if (value != null) sValue = value.toString();
+			}
+			else if (type == EdmType.STRING){
+				if (value != null) sValue = value.toString();
+			}
+			else if (type == EdmType.DATETIME){
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				LocalDateTime ldt = (LocalDateTime)value;
 				DateTime dt = ldt.toDateTime(DateTimeZone.UTC);
 				if (value != null) sValue = toString(dt);
-			}  else if (type == EdmType.BINARY){
+			}
+			else if (type == EdmType.BINARY){
 				writer.writeAttribute(new QName2(m,"type","m"), type.toTypeString());
 				byte[] bValue = (byte[]) value;
 				if (value != null) sValue = Base64.encodeBase64String(bValue);
-			} else {
+			}
+			else {
 				throw new UnsupportedOperationException("Implement " + type);
 			}
+			
 			if (value == null) {
 				writer.writeAttribute(new QName2(m,"null","m"), "true");
 			} else {

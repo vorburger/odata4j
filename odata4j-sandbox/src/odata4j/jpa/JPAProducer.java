@@ -83,8 +83,6 @@ public class JPAProducer implements ODataProducer {
 	}
 	
 	private class Context {
-		@SuppressWarnings("unused")
-		EdmDataServices metadata;
 		EdmEntitySet ees;
 		EntityType<?> jpaEntityType;
 		String keyPropertyName;
@@ -160,8 +158,7 @@ public class JPAProducer implements ODataProducer {
 		
 		context.em = emf.createEntityManager();
 		try {
-			context.metadata = getMetadata();
-			context.ees = findEdmEntitySet(metadata, entitySetName);
+			context.ees = metadata.getEdmEntitySet(entitySetName);
 			context.jpaEntityType = findJPAEntityType(context.em,context.ees.type.name);
 			context.keyPropertyName = context.ees.type.key;
 			context.entityKey = entityKey;
@@ -226,18 +223,6 @@ public class JPAProducer implements ODataProducer {
 	
 	
 
-	
-	private static EdmEntitySet findEdmEntitySet(EdmDataServices metadata, String entitySetName){
-		for(EdmSchema schema : metadata.schemas){
-			for(EdmEntityContainer eec : schema.entityContainers){
-				for(EdmEntitySet ees : eec.entitySets){
-					if (ees.name.equals(entitySetName))
-						return ees;
-				}
-			}
-		}
-		throw new RuntimeException("EdmEntitySet " + entitySetName + " not found");
-	}
 	
 	
 	
@@ -320,7 +305,7 @@ public class JPAProducer implements ODataProducer {
 	
 	@Override
 	public EntityResponse createEntity(String entitySetName, List<OProperty<?>> properties) {
-		final EdmEntitySet ees = findEdmEntitySet(metadata, entitySetName);
+		final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
 		
 		EntityManager em = emf.createEntityManager();
 		try {
@@ -351,7 +336,7 @@ public class JPAProducer implements ODataProducer {
 
 	@Override
 	public void deleteEntity(String entitySetName, Object entityKey) {
-		final EdmEntitySet ees = findEdmEntitySet(metadata, entitySetName);
+		final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
 		
 		EntityManager em = emf.createEntityManager();
 		try {
@@ -369,7 +354,7 @@ public class JPAProducer implements ODataProducer {
 
 	@Override
 	public void mergeEntity(String entitySetName, Object entityKey, List<OProperty<?>> properties) {
-		final EdmEntitySet ees = findEdmEntitySet(metadata, entitySetName);
+		final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
 		
 		EntityManager em = emf.createEntityManager();
 		try {
@@ -389,7 +374,7 @@ public class JPAProducer implements ODataProducer {
 
 	@Override
 	public void updateEntity(String entitySetName, Object entityKey, List<OProperty<?>> properties) {
-		final EdmEntitySet ees = findEdmEntitySet(metadata, entitySetName);
+		final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
 		
 		EntityManager em = emf.createEntityManager();
 		try {

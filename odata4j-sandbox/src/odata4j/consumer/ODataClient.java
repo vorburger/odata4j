@@ -63,11 +63,12 @@ public class ODataClient {
 	
 	public AtomEntry getEntity(ODataClientRequest request){
 		try {
-			ClientResponse response = doRequest(request,200);
+			ClientResponse response = doRequest(request,404,200);
+			if (response.getStatus()==404)
+				return null;
 			XMLEventReader2 reader = doXmlRequest(response);
 			return AtomFeedParser.parseFeed(reader).entries.iterator().next();
 		} catch (Exception e) {
-			
 			throw new RuntimeException(e);
 		}
 		

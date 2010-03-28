@@ -13,6 +13,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import odata4j.core.ODataConstants;
 import odata4j.core.OProperty;
@@ -99,6 +100,9 @@ public class EntityRequestResource extends BaseResource {
 			
 		EntityResponse response = producer.getEntity(entitySetName,idObject);
 		
+		if (response==null)
+			return Response.status(Status.NOT_FOUND).build();
+		
 		String baseUri = context.getUriInfo().getBaseUri().toString();
 		StringWriter sw = new StringWriter();
 		AtomFeedWriter.generateResponseEntry(baseUri,response,sw);
@@ -121,7 +125,7 @@ public class EntityRequestResource extends BaseResource {
 		if (!StringUtils.isBlank(id)){
 			if (id.startsWith("(") && id.endsWith(")")){
 				cleanid = id.substring(1,id.length()-1);
-				log.info("cleanid!: " + cleanid);
+				//log.info("cleanid!: " + cleanid);
 			}
 		}
 		if (cleanid==null)
