@@ -26,10 +26,7 @@ import odata4j.edm.EdmEntitySet;
 import odata4j.edm.EdmProperty;
 import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
-import odata4j.producer.CreateEntityRequest;
-import odata4j.producer.EntitiesRequest;
 import odata4j.producer.EntitiesResponse;
-import odata4j.producer.EntityRequest;
 import odata4j.producer.EntityResponse;
 import odata4j.producer.ODataProducer;
 import odata4j.producer.QueryInfo;
@@ -65,9 +62,9 @@ public class JPAProducer implements ODataProducer {
 	}
 	
 	@Override
-	public EntityResponse getEntity(EntityRequest request) {
+	public EntityResponse getEntity(String entitySetName, Object entityKey) {
 		
-		return common(request.getEntityName(),request.getEntityKey(),null,new Func1<Context,EntityResponse>(){
+		return common(entitySetName,entityKey,null,new Func1<Context,EntityResponse>(){
 			public EntityResponse apply(Context input) {
 				return getEntity(input);
 			}});
@@ -76,9 +73,9 @@ public class JPAProducer implements ODataProducer {
 	
 	
 	@Override
-	public EntitiesResponse getEntities(EntitiesRequest request) {
+	public EntitiesResponse getEntities(String entitySetName, QueryInfo queryInfo) {
 		
-		return common(request.getEntityName(),null,request.getQueryInfo(),new Func1<Context,EntitiesResponse>(){
+		return common(entitySetName,null,queryInfo,new Func1<Context,EntitiesResponse>(){
 			public EntitiesResponse apply(Context input) {
 				return getEntities(input);
 			}});
@@ -174,6 +171,9 @@ public class JPAProducer implements ODataProducer {
 			context.em.close();
 		}
 	}
+	
+	
+	
 	
 	private static List<OProperty<?>> jpaEntityToOProperties(EdmEntitySet ees, EntityType<?> entityType, Object jpaEntity){
 		List<OProperty<?>> rt = new ArrayList<OProperty<?>>();
@@ -288,13 +288,22 @@ public class JPAProducer implements ODataProducer {
 				return input.name.equals(name);
 			}});
 	}
-	private static Object toJPAEntity(EdmEntitySet ees, EntityType<?> jpaEntityType, List<OProperty<?>> properties){
+	private static Object createNewJPAEntity(EdmEntitySet ees, EntityType<?> jpaEntityType, List<OProperty<?>> properties){
 		try {
 			Constructor<?> ctor = jpaEntityType.getJavaType().getDeclaredConstructor();
 			ctor.setAccessible(true);
 			Object jpaEntity = ctor.newInstance();
 			
+			applyOProperties(jpaEntityType,properties,jpaEntity);
 			
+			return jpaEntity;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} 
+	}
+	
+	private static void applyOProperties(EntityType<?> jpaEntityType,List<OProperty<?>> properties, Object jpaEntity){
+		try {
 			for(OProperty<?> prop : properties){
 				//EdmProperty ep = findProperty(ees,prop.getName());
 				Attribute<?,?> att = jpaEntityType.getAttribute(prop.getName());
@@ -307,8 +316,6 @@ public class JPAProducer implements ODataProducer {
 				field.set(jpaEntity, prop.getValue());
 				
 			}
-			
-			return jpaEntity;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} 
@@ -316,15 +323,15 @@ public class JPAProducer implements ODataProducer {
 	
 	
 	@Override
-	public EntityResponse createEntity(CreateEntityRequest request) {
-		String entityName = request.getEntityName();
+	public EntityResponse createEntity(String entitySetName, List<OProperty<?>> properties) {
+		String entityName = entitySetName;
 		final EdmEntitySet ees = findEdmEntitySet(metadata, entityName);
 		
 		EntityManager em = emf.createEntityManager();
 		try {
 			em.getTransaction().begin();
 			EntityType<?> jpaEntityType = findEntityType(em, entityName);
-			Object jpaEntity = toJPAEntity(ees, jpaEntityType, request.getProperties());
+			Object jpaEntity = createNewJPAEntity(ees, jpaEntityType, properties);
 			em.persist(jpaEntity);
 			em.getTransaction().commit();
 			
@@ -342,6 +349,64 @@ public class JPAProducer implements ODataProducer {
 					return ees;
 				}};
 			
+		} finally {
+			em.close();
+		}
+	}
+
+	@Override
+	public void deleteEntity(String entitySetName, Object entityKey) {
+		String entityName = entitySetName;
+		final EdmEntitySet ees = findEdmEntitySet(metadata, entityName);
+		
+		EntityManager em = emf.createEntityManager();
+		try {
+			em.getTransaction().begin();
+			EntityType<?> jpaEntityType = findEntityType(em, entityName);
+			Object jpaEntity = em.find(jpaEntityType.getJavaType(), entityKey);
+			em.remove(jpaEntity);
+			em.getTransaction().commit();
+	
+		} finally {
+			em.close();
+		}
+		
+	}
+
+	@Override
+	public void mergeEntity(String entitySetName, Object entityKey, List<OProperty<?>> properties) {
+		String entityName = entitySetName;
+		final EdmEntitySet ees = findEdmEntitySet(metadata, entityName);
+		
+		EntityManager em = emf.createEntityManager();
+		try {
+			em.getTransaction().begin();
+			EntityType<?> jpaEntityType = findEntityType(em, entityName);
+			Object jpaEntity = em.find(jpaEntityType.getJavaType(), entityKey);
+			
+			applyOProperties(jpaEntityType,properties,jpaEntity);
+			
+			em.getTransaction().commit();
+	
+		} finally {
+			em.close();
+		}
+		
+	}
+
+	@Override
+	public void updateEntity(String entitySetName, Object entityKey, List<OProperty<?>> properties) {
+		String entityName = entitySetName;
+		final EdmEntitySet ees = findEdmEntitySet(metadata, entityName);
+		
+		EntityManager em = emf.createEntityManager();
+		try {
+			em.getTransaction().begin();
+			EntityType<?> jpaEntityType = findEntityType(em, entityName);
+			Object jpaEntity = createNewJPAEntity(ees, jpaEntityType, properties);
+			em.merge(jpaEntity);
+			em.getTransaction().commit();
+	
 		} finally {
 			em.close();
 		}

@@ -7,6 +7,7 @@ import javax.ws.rs.core.MediaType;
 import odata4j.consumer.ODataClient;
 import odata4j.consumer.ODataClientRequest;
 import odata4j.core.OClientBehavior;
+import odata4j.core.ODataConstants;
 
 import org.apache.commons.codec2.binary.Base64;
 import org.joda.time.DateTime;
@@ -70,7 +71,7 @@ public class AzureTableBehavior implements OClientBehavior {
 					.header("DataServiceVersion", "1.0;NetFx")
 					.header("MaxDataServiceVersion", "1.0;NetFx");
 			 
-			 if (isPut||isDelete||(isPost&&request.getHeaders().containsKey("X-HTTP-METHOD"))) 
+			 if (isPut||isDelete||(isPost&&request.getHeaders().containsKey(ODataConstants.Headers.X_HTTP_METHOD))) 
 			     request = request.header("If-Match", "*");  // azure tables require for put,delete,merge
 			 
 			 if (isDelete){

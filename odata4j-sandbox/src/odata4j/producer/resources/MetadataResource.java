@@ -8,6 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import odata4j.core.ODataConstants;
 import odata4j.edm.EdmDataServices;
 import odata4j.producer.ODataProducer;
 import odata4j.xml.EdmxWriter;

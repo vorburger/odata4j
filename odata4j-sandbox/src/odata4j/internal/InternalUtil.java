@@ -1,16 +1,21 @@
 package odata4j.internal;
 
 import java.io.Reader;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import com.sun.jersey.api.core.HttpRequestContext;
 
 import odata4j.core.OEntity;
 import odata4j.core.OProperty;
 import odata4j.stax2.XMLEventReader2;
 import odata4j.stax2.XMLFactoryProvider2;
 import odata4j.stax2.XMLInputFactory2;
+import odata4j.xml.AtomFeedParser;
+import odata4j.xml.AtomFeedParser.AtomEntry;
 import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 import core4j.Enumerable;
 import core4j.Func1;
@@ -19,6 +24,8 @@ import core4j.ThrowingFunc1;
 
 public class InternalUtil {
 
+	
+	
 	
 	public static XMLEventReader2 newXMLEventReader(Reader reader){
 		XMLInputFactory2 f = XMLFactoryProvider2.getInstance().newXMLInputFactory2();

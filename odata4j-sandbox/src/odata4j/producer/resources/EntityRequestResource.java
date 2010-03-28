@@ -1,16 +1,21 @@
 package odata4j.producer.resources;
 
 import java.io.StringWriter;
+import java.util.List;
 import java.util.logging.Logger;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import odata4j.producer.EntityRequest;
+import odata4j.core.ODataConstants;
+import odata4j.core.OProperty;
 import odata4j.producer.EntityResponse;
 import odata4j.producer.ODataProducer;
 import odata4j.xml.AtomFeedWriter;
@@ -20,23 +25,66 @@ import org.apache.commons.lang.StringUtils;
 import com.sun.jersey.api.core.HttpContext;
 
 @Path("{entityName}{id: (\\(.*\\))}")
-public class EntityRequestResource {
+public class EntityRequestResource extends BaseResource {
 
 	private static final Logger log = Logger.getLogger(EntityRequestResource.class.getName());
 	
-	
-	@GET
-	@Produces(ODataConstants.APPLICATION_ATOM_XML_CHARSET)
-	public Response getEntities(
+	@PUT
+	public Response updateEntity(
 			@Context HttpContext context,
 			@Context ODataProducer producer,
 			final @PathParam("entityName") String entityName, 
 			@PathParam("id") String id){
 		
-		log.info(String.format("getEntities(%s,%s)",entityName,id));
+		log.info(String.format("updateEntity(%s,%s)",entityName,id));
 		
-		String baseUri = context.getUriInfo().getBaseUri().toString();
+		List<OProperty<?>> properties = this.getRequestEntityProperties(context.getRequest());
 		
+		Object idObject = idObject(id);
+		
+		producer.updateEntity(entityName, idObject, properties);
+		
+		return Response.ok().header("DataServiceVersion","1.0").build();
+	}
+	
+	@POST
+	public Response mergeEntity(
+			@Context HttpContext context,
+			@Context ODataProducer producer,
+			final @PathParam("entityName") String entityName, 
+			@PathParam("id") String id){
+		
+		if (!"MERGE".equals(context.getRequest().getHeaderValue(ODataConstants.Headers.X_HTTP_METHOD)))
+			throw new RuntimeException("Expected a tunnelled MERGE");
+			
+		log.info(String.format("mergeEntity(%s,%s)",entityName,id));
+		
+		List<OProperty<?>> properties = this.getRequestEntityProperties(context.getRequest());
+		
+		Object idObject = idObject(id);
+		
+		producer.mergeEntity(entityName, idObject, properties);
+		
+		return Response.ok().header("DataServiceVersion","1.0").build();
+	}
+	
+	
+	@DELETE
+	public Response deleteEntity(
+			@Context HttpContext context,
+			@Context ODataProducer producer,
+			final @PathParam("entityName") String entityName, 
+			@PathParam("id") String id){
+		log.info(String.format("getEntity(%s,%s)",entityName,id));
+		
+		Object idObject = idObject(id);
+		
+		producer.deleteEntity(entityName, idObject);
+		
+		return Response.ok().header("DataServiceVersion","1.0").build();
+	}
+	
+	private Object idObject(String id){
 		String cleanid = null;
 		if (!StringUtils.isBlank(id)){
 			if (id.startsWith("(") && id.endsWith(")")){
@@ -53,19 +101,24 @@ public class EntityRequestResource {
 		} else {
 			idObject = Integer.parseInt(cleanid);
 		}
-		final Object idObjectFinal = idObject;
+		return idObject;
+	}
+	
+	@GET
+	@Produces(ODataConstants.APPLICATION_ATOM_XML_CHARSET)
+	public Response getEntity(
+			@Context HttpContext context,
+			@Context ODataProducer producer,
+			final @PathParam("entityName") String entityName, 
+			@PathParam("id") String id){
 		
-
-		EntityRequest request = new EntityRequest(){
-			public String getEntityName() {
-				return entityName;
-			}
-			public Object getEntityKey() {
-				return idObjectFinal;
-			}};
+		log.info(String.format("getEntity(%s,%s)",entityName,id));
+		
+		Object idObject =idObject(id);
 			
-		EntityResponse response = producer.getEntity(request);
+		EntityResponse response = producer.getEntity(entityName,idObject);
 		
+		String baseUri = context.getUriInfo().getBaseUri().toString();
 		StringWriter sw = new StringWriter();
 		AtomFeedWriter.generateResponseEntry(baseUri,response,sw);
 		String entity = sw.toString();

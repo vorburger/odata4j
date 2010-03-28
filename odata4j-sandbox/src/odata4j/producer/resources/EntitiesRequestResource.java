@@ -16,6 +16,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import odata4j.core.ODataConstants;
 import odata4j.core.OEntity;
 import odata4j.core.OProperty;
 import odata4j.expression.BoolCommonExpression;
@@ -23,8 +24,6 @@ import odata4j.expression.CommonExpression;
 import odata4j.expression.ExpressionParser;
 import odata4j.expression.OrderByExpression;
 import odata4j.internal.InternalUtil;
-import odata4j.producer.CreateEntityRequest;
-import odata4j.producer.EntitiesRequest;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityResponse;
 import odata4j.producer.ODataProducer;
@@ -36,12 +35,14 @@ import odata4j.xml.AtomFeedParser.AtomEntry;
 import odata4j.xml.AtomFeedParser.DataServicesAtomEntry;
 
 import com.sun.jersey.api.core.HttpContext;
+import com.sun.jersey.api.core.HttpRequestContext;
 
 @Path("{entityName}")
-public class EntitiesRequestResource {
+public class EntitiesRequestResource extends BaseResource {
 
 	private static final Logger log = Logger.getLogger(EntitiesRequestResource.class.getName());
 	
+
 	@POST
 	@Produces(ODataConstants.APPLICATION_ATOM_XML_CHARSET)
 	public Response createEntity(
@@ -51,29 +52,11 @@ public class EntitiesRequestResource {
 		
 		log.info(String.format("createEntity(%s)",entityName));
 		
+		List<OProperty<?>> properties = this.getRequestEntityProperties(context.getRequest());
+
+		EntityResponse response = producer.createEntity(entityName,properties);
+		
 		String baseUri = context.getUriInfo().getBaseUri().toString();
-		
-		String requestEntity = context.getRequest().getEntity(String.class);
-		
-		XMLEventReader2 reader = InternalUtil.newXMLEventReader(new StringReader(requestEntity));
-		AtomEntry entry =  AtomFeedParser.parseFeed(reader).entries.iterator().next();
-		DataServicesAtomEntry dsae = (DataServicesAtomEntry)entry;
-		OEntity entity = InternalUtil.toEntity(dsae);
-		
-		final List<OProperty<?>> properties =entity.getProperties();
-		CreateEntityRequest request = new CreateEntityRequest(){
-
-			@Override
-			public String getEntityName() {
-				return entityName;
-			}
-
-			@Override
-			public List<OProperty<?>> getProperties() {
-				return properties;
-			}};
-		EntityResponse response = producer.createEntity(request);
-		
 		StringWriter sw = new StringWriter();
 		String entryId = AtomFeedWriter.generateResponseEntry(baseUri,response,sw);
 		String responseEntity = sw.toString();
@@ -99,21 +82,12 @@ public class EntitiesRequestResource {
 		
 		log.info(String.format("getEntities(%s,%s,%s,%s,%s)",entityName,top,skip,filter,orderBy));
 		
-		String baseUri = context.getUriInfo().getBaseUri().toString();
-		
 		final QueryInfo finalQuery = new QueryInfo(parseTop(top),parseSkip(skip),parseFilter(filter),parseOrderBy(orderBy));
 		
 		
+		EntitiesResponse response = producer.getEntities(entityName,finalQuery);
 		
-		EntitiesRequest request = new EntitiesRequest(){
-			public String getEntityName() {
-				return entityName;
-			}
-			public QueryInfo getQueryInfo() {
-				return finalQuery;
-			}};
-		EntitiesResponse response = producer.getEntities(request);
-		
+		String baseUri = context.getUriInfo().getBaseUri().toString();
 		StringWriter sw = new StringWriter();
 		AtomFeedWriter.generateFeed(baseUri,response,sw);
 		String entity = sw.toString();
