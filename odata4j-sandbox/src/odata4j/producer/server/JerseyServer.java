@@ -7,13 +7,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import odata4j.producer.resources.ClientAccessPolicyXmlResource;
+import odata4j.producer.resources.CrossDomainXmlResource;
+
+import com.sun.jersey.api.container.ContainerFactory;
 import com.sun.jersey.api.container.httpserver.HttpServerFactory;
 import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 import com.sun.jersey.spi.container.ResourceFilterFactory;
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import core4j.CoreUtils;
@@ -24,20 +30,24 @@ public class JerseyServer {
 	private static final Logger log = Logger.getLogger(JerseyServer.class.getName());
 	
 	private HttpServer server;
-	private final String baseUri;
+	private final String appBaseUri;
 	private final List<Filter> sunFilters = new ArrayList<Filter>();
 	private final List<String> jerseyRequestFilters = new ArrayList<String>();
 	private final List<String> jerseyResponseFilters = new ArrayList<String>();
 	private final List<String> jerseyResourceFilters = new ArrayList<String>();
-	private final List<Class<?>> resourceClasses = new ArrayList<Class<?>>();
+	private final List<Class<?>> appResourceClasses = new ArrayList<Class<?>>();
+	private final List<Class<?>> rootResourceClasses = new ArrayList<Class<?>>();
 	
 	
-	public JerseyServer(String baseUri){
-		this.baseUri = baseUri;
+	public JerseyServer(String appBaseUri){
+		this.appBaseUri = appBaseUri;
 	}
 	
-	public void addResourceClass(Class<?> clazz){
-		resourceClasses.add(clazz);
+	public void addAppResourceClass(Class<?> clazz){
+		appResourceClasses.add(clazz);
+	}
+	public void addRootResourceClass(Class<?> clazz){
+		rootResourceClasses.add(clazz);
 	}
 	public  <T extends ContainerRequestFilter> void addJerseyRequestFilter(Class<T> filter){
 		jerseyRequestFilters.add(filter.getName());
@@ -58,38 +68,51 @@ public class JerseyServer {
 		server.stop(0);
 	}
 	
+	
+
+	
 	@SuppressWarnings("unchecked")
 	public void start(){
 		
 		try {
-			DefaultResourceConfig c = new DefaultResourceConfig( Enumerable.create(this.resourceClasses).cast(Object.class).cast(Class.class).toArray(Class.class));
+			ResourceConfig appResourceConfig = buildConfig(this.appResourceClasses);
+			server = HttpServerFactory.create(appBaseUri,appResourceConfig);
+		
+			if (this.rootResourceClasses.size() > 0) {
+				 ResourceConfig rootResourceConfig = buildConfig(this.rootResourceClasses);
+				 HttpHandler rootHttpHandler = ContainerFactory.createContainer(HttpHandler.class, rootResourceConfig);
+				 server.createContext("/", rootHttpHandler);
+			}
 			
-			
-			Map<String,Object> paf = new HashMap<String,Object>();
-			paf.put("com.sun.jersey.spi.container.ContainerRequestFilters",Enumerable.create(jerseyRequestFilters).toArray(String.class));
-			paf.put("com.sun.jersey.spi.container.ContainerResponseFilters",Enumerable.create(jerseyResponseFilters).toArray(String.class));
-			paf.put("com.sun.jersey.spi.container.ResourceFilters",Enumerable.create(jerseyResourceFilters).toArray(String.class));
-			c.setPropertiesAndFeatures(paf);
-
-			server = HttpServerFactory.create(baseUri,c);
-			
+			// add sun filters to all contexts
 			 Object tmp = CoreUtils.getFieldValue(server,"server",Object.class);
 			 tmp = CoreUtils.getFieldValue(tmp,"contexts",Object.class);
 			 tmp = CoreUtils.getFieldValue(tmp,"list",Object.class);
-			 HttpContext context = ((List<HttpContext>)tmp).get(0);
-			 context.getFilters().addAll(sunFilters);
+			 for(HttpContext context : ((List<HttpContext>)tmp))
+				 context.getFilters().addAll(sunFilters);
 			
 			
 			server.start();
 			
-			log.info(String.format("Jersey app started with WADL available at %sapplication.wadl\n", baseUri));
-			
-			//System.in.read();
+			log.info(String.format("Jersey app started with WADL available at %sapplication.wadl\n", appBaseUri));
+		
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	
-		//threadSelector.stopEndpoint();
-		//System.exit(0);
+		
+	}
+	
+	
+	
+	private ResourceConfig buildConfig(List<?> classes){
+		DefaultResourceConfig c = new DefaultResourceConfig( Enumerable.create(classes).cast(Object.class).cast(Class.class).toArray(Class.class));
+		
+		Map<String,Object> paf = new HashMap<String,Object>();
+		paf.put("com.sun.jersey.spi.container.ContainerRequestFilters",Enumerable.create(jerseyRequestFilters).toArray(String.class));
+		paf.put("com.sun.jersey.spi.container.ContainerResponseFilters",Enumerable.create(jerseyResponseFilters).toArray(String.class));
+		paf.put("com.sun.jersey.spi.container.ResourceFilters",Enumerable.create(jerseyResourceFilters).toArray(String.class));
+		c.setPropertiesAndFeatures(paf);
+		return c;
 	}
 }
