@@ -21,13 +21,12 @@ import odata4j.core.OEntity;
 import odata4j.core.OProperties;
 import odata4j.core.OProperty;
 import odata4j.edm.EdmDataServices;
-import odata4j.edm.EdmEntityContainer;
 import odata4j.edm.EdmEntitySet;
 import odata4j.edm.EdmProperty;
-import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityResponse;
+import odata4j.producer.InlineCount;
 import odata4j.producer.ODataProducer;
 import odata4j.producer.QueryInfo;
 import core4j.Enumerable;
@@ -135,8 +134,8 @@ public class JPAProducer implements ODataProducer {
 	
 	private EntitiesResponse getEntities(final Context context){
 		
-		Enumerable<Object> entityObjects =enumDynamicEntities(context.em,context.jpaEntityType.getJavaType(),context.query);
-		final List<OEntity> entities = entityObjects.select(new Func1<Object,OEntity>(){
+		final DynamicEntitiesResponse response =enumJpaEntities(context.em,context.jpaEntityType.getJavaType(),context.query);
+		final List<OEntity> entities = response.jpaEntities.select(new Func1<Object,OEntity>(){
 			public OEntity apply(final Object input) {
 				return makeEntity(context,input);
 			}}).toList();
@@ -150,6 +149,11 @@ public class JPAProducer implements ODataProducer {
 			@Override
 			public EdmEntitySet getEntitySet() {
 				return context.ees;
+			}
+
+			@Override
+			public Integer getInlineCount() {
+				return response.inlineCount;
 			}};
 	}
 	
@@ -234,8 +238,15 @@ public class JPAProducer implements ODataProducer {
 		throw new RuntimeException("JPA Entity type " + jpaEntityTypeName + " not found");
 	}
 	
-	
-	public static Enumerable<Object> enumDynamicEntities(EntityManager em,Class<?> clazz, QueryInfo query){
+	private static class DynamicEntitiesResponse {
+		public final Integer inlineCount;
+		public final Enumerable<Object> jpaEntities;
+		public DynamicEntitiesResponse(Enumerable<Object> jpaEntities, Integer inlineCount){
+			this.jpaEntities= jpaEntities;
+			this.inlineCount = inlineCount;
+		}
+	}
+	public static DynamicEntitiesResponse enumJpaEntities(EntityManager em,Class<?> clazz, QueryInfo query){
 		CriteriaBuilder cb =  em.getCriteriaBuilder();
 		CriteriaQuery<Object> cq = cb.createQuery();
 		
@@ -253,19 +264,22 @@ public class JPAProducer implements ODataProducer {
 //		}
 		
 		
+		
 		TypedQuery<Object> tq = em.createQuery(cq);
+		
+		Integer inlineCount = query.inlineCount==InlineCount.ALLPAGES?tq.getResultList().size():null; 
+
 		if (query.top != null) {
 			if (query.top.equals(0)){
-				return Enumerable.empty(Object.class);
+				return new DynamicEntitiesResponse( Enumerable.empty(Object.class),inlineCount);
 			}
 			tq = tq.setMaxResults(query.top);
 		}
 		if (query.skip != null){
 			tq = tq.setFirstResult(query.skip);
 		}
-		
 		List<Object> results = tq.getResultList();
-		return Enumerable.create(results);
+		return new  DynamicEntitiesResponse( Enumerable.create(results),inlineCount);
 	}
 
 

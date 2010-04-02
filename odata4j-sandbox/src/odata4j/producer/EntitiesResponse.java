@@ -9,4 +9,5 @@ public interface EntitiesResponse {
 
 	public EdmEntitySet getEntitySet();
 	public List<OEntity> getEntities();
+	public Integer getInlineCount();
 }

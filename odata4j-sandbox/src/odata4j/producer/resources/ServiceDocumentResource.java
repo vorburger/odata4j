@@ -32,6 +32,6 @@ public class ServiceDocumentResource {
 		ServiceDocumentWriter.write(baseUri, s,w);
 		
 
-		return Response.ok(w.toString(),ODataConstants.APPLICATION_XML_CHARSET).header("DataServiceVersion","1.0").build();
+		return Response.ok(w.toString(),ODataConstants.APPLICATION_XML_CHARSET).header(ODataConstants.Headers.DATA_SERVICE_VERSION,ODataConstants.DATA_SERVICE_VERSION).build();
 	}
 }

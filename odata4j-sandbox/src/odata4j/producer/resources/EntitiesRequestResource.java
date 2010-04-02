@@ -2,7 +2,9 @@ package odata4j.producer.resources;
 
 import java.io.StringWriter;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
@@ -23,6 +25,7 @@ import odata4j.expression.ExpressionParser;
 import odata4j.expression.OrderByExpression;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityResponse;
+import odata4j.producer.InlineCount;
 import odata4j.producer.ODataProducer;
 import odata4j.producer.QueryInfo;
 import odata4j.xml.AtomFeedWriter;
@@ -56,7 +59,7 @@ public class EntitiesRequestResource extends BaseResource {
 		return Response.ok(responseEntity,ODataConstants.APPLICATION_ATOM_XML_CHARSET)
 					.status(Status.CREATED)
 					.location(URI.create(entryId))
-					.header("DataServiceVersion","1.0").build();
+					.header(ODataConstants.Headers.DATA_SERVICE_VERSION,ODataConstants.DATA_SERVICE_VERSION).build();
 		
 	}
 	
@@ -67,14 +70,15 @@ public class EntitiesRequestResource extends BaseResource {
 			@Context HttpContext context,
 			@Context ODataProducer producer,
 		    @PathParam("entitySetName") String entitySetName, 
+		    @QueryParam("$inlinecount") String inlineCount, 
 			@QueryParam("$top") String top, 
 			@QueryParam("$skip") String skip,
 			@QueryParam("$filter") String filter,
 			@QueryParam("$orderby") String orderBy){
 		
-		log.info(String.format("getEntities(%s,%s,%s,%s,%s)",entitySetName,top,skip,filter,orderBy));
+		log.info(String.format("getEntities(%s,%s,%s,%s,%s,%s)",entitySetName,inlineCount,top,skip,filter,orderBy));
 		
-		final QueryInfo finalQuery = new QueryInfo(parseTop(top),parseSkip(skip),parseFilter(filter),parseOrderBy(orderBy));
+		final QueryInfo finalQuery = new QueryInfo(parseInlineCount(inlineCount),parseTop(top),parseSkip(skip),parseFilter(filter),parseOrderBy(orderBy));
 		
 		
 		EntitiesResponse response = producer.getEntities(entitySetName,finalQuery);
@@ -84,10 +88,19 @@ public class EntitiesRequestResource extends BaseResource {
 		AtomFeedWriter.generateFeed(baseUri,response,sw);
 		String entity = sw.toString();
 		//log.info("entity: " + entity);
-		return Response.ok(entity,ODataConstants.APPLICATION_ATOM_XML_CHARSET).header("DataServiceVersion","1.0").build();
+		return Response.ok(entity,ODataConstants.APPLICATION_ATOM_XML_CHARSET).header(ODataConstants.Headers.DATA_SERVICE_VERSION,ODataConstants.DATA_SERVICE_VERSION).build();
 		
 	}
 	
+	private InlineCount parseInlineCount(String inlineCount) {
+		if (inlineCount==null)
+			return null;
+		Map<String,InlineCount> rt = new HashMap<String,InlineCount>();
+		rt.put("allpages", InlineCount.ALLPAGES);
+		rt.put("none",InlineCount.NONE);
+		return rt.get(inlineCount);
+	}
+
 	private Integer parseTop(String top){
 		return top==null?null:Integer.parseInt(top);
 	}

@@ -59,6 +59,7 @@ public class DomXMLFactoryProvider2 extends XMLFactoryProvider2 {
 	}
 	private static class DomXMLEventWriter2 implements XMLEventWriter2{
 
+		@SuppressWarnings("unused")
 		private final Writer writer;
 		public DomXMLEventWriter2(Writer writer){
 			this.writer = writer;

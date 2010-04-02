@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import odata4j.producer.resources.ClientAccessPolicyXmlResource;
-import odata4j.producer.resources.CrossDomainXmlResource;
-
 import com.sun.jersey.api.container.ContainerFactory;
 import com.sun.jersey.api.container.httpserver.HttpServerFactory;
 import com.sun.jersey.api.core.DefaultResourceConfig;

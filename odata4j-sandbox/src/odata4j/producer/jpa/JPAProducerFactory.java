@@ -2,9 +2,6 @@ package odata4j.producer.jpa;
 
 import java.util.Properties;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-
 import odata4j.producer.ODataProducer;
 import odata4j.producer.ODataProducerFactory;
 

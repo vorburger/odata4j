@@ -45,7 +45,7 @@ public class EntityRequestResource extends BaseResource {
 		
 		producer.updateEntity(entitySetName, idObject, properties);
 		
-		return Response.ok().header("DataServiceVersion","1.0").build();
+		return Response.ok().header(ODataConstants.Headers.DATA_SERVICE_VERSION,ODataConstants.DATA_SERVICE_VERSION).build();
 	}
 	
 	@POST
@@ -66,7 +66,7 @@ public class EntityRequestResource extends BaseResource {
 		
 		producer.mergeEntity(entitySetName, idObject, properties);
 		
-		return Response.ok().header("DataServiceVersion","1.0").build();
+		return Response.ok().header(ODataConstants.Headers.DATA_SERVICE_VERSION,ODataConstants.DATA_SERVICE_VERSION).build();
 	}
 	
 	
@@ -83,7 +83,7 @@ public class EntityRequestResource extends BaseResource {
 		
 		producer.deleteEntity(entitySetName, idObject);
 		
-		return Response.ok().header("DataServiceVersion","1.0").build();
+		return Response.ok().header(ODataConstants.Headers.DATA_SERVICE_VERSION,ODataConstants.DATA_SERVICE_VERSION).build();
 	}
 	
 	@GET
@@ -108,7 +108,7 @@ public class EntityRequestResource extends BaseResource {
 		AtomFeedWriter.generateResponseEntry(baseUri,response,sw);
 		String entity = sw.toString();
 		
-		return Response.ok(entity,ODataConstants.APPLICATION_ATOM_XML_CHARSET).header("DataServiceVersion","1.0").build();
+		return Response.ok(entity,ODataConstants.APPLICATION_ATOM_XML_CHARSET).header(ODataConstants.Headers.DATA_SERVICE_VERSION,ODataConstants.DATA_SERVICE_VERSION).build();
 		
 	}
 	

@@ -1,7 +1,5 @@
 package odata4j.producer.inmemory;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -9,13 +7,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.sun.jersey.api.NotFoundException;
-
-import core4j.Enumerable;
-import core4j.Func;
-import core4j.Func1;
-import core4j.Predicate1;
 
 import odata4j.core.OEntity;
 import odata4j.core.OProperties;
@@ -29,8 +20,16 @@ import odata4j.edm.EdmSchema;
 import odata4j.edm.EdmType;
 import odata4j.producer.EntitiesResponse;
 import odata4j.producer.EntityResponse;
+import odata4j.producer.InlineCount;
 import odata4j.producer.ODataProducer;
 import odata4j.producer.QueryInfo;
+
+import com.sun.jersey.api.NotFoundException;
+
+import core4j.Enumerable;
+import core4j.Func;
+import core4j.Func1;
+import core4j.Predicate1;
 
 public class InMemoryProducer implements ODataProducer {
 
@@ -73,7 +72,7 @@ public class InMemoryProducer implements ODataProducer {
 	
 	
 	private final String namespace;
-	private final Map<String,EntityInfo> eis = new  HashMap<String,EntityInfo>();
+	private final Map<String,EntityInfo<?,?>> eis = new  HashMap<String,EntityInfo<?,?>>();
 	private EdmDataServices metadata;
 	
 	public InMemoryProducer(String namespace){
@@ -98,7 +97,7 @@ public class InMemoryProducer implements ODataProducer {
 		
 
 		for (String entitySetName : eis.keySet()) {
-			EntityInfo ei = eis.get(entitySetName);
+			EntityInfo<?,?> ei = eis.get(entitySetName);
 			
 			List<EdmProperty> properties = new ArrayList<EdmProperty>();
 			properties.add(new EdmProperty(ID_PROPNAME, getEdmType(ei.keyClass), false, null));
@@ -133,9 +132,9 @@ public class InMemoryProducer implements ODataProducer {
 	private static <T1,T2> Func1<Object,T2> widen(final Func1<T1,T2> fn){
 		return new Func1<Object,T2>(){
 
+			@SuppressWarnings("unchecked")
 			@Override
 			public T2 apply(Object input) {
-				
 				return fn.apply((T1)input);
 			}};
 	}
@@ -144,6 +143,7 @@ public class InMemoryProducer implements ODataProducer {
 			Func<Iterable<TEntity>> get, final String idPropertyName){
 		register(entityClass,keyClass,entitySetName,get,new Func1<TEntity,TKey>(){
 
+			@SuppressWarnings("unchecked")
 			@Override
 			public TKey apply(TEntity input) {
 				return (TKey)eis.get(entitySetName).invokeGetter(input, idPropertyName);
@@ -225,7 +225,7 @@ public class InMemoryProducer implements ODataProducer {
 				return toOEntity(ei,input);
 			}}).toList();
 		
-	
+		final Integer inlineCount = queryInfo.inlineCount==InlineCount.ALLPAGES?iter.count():null;
 		
 		return new EntitiesResponse(){
 
@@ -237,9 +237,15 @@ public class InMemoryProducer implements ODataProducer {
 			@Override
 			public EdmEntitySet getEntitySet() {
 				return ees;
+			}
+
+			@Override
+			public Integer getInlineCount() {
+				return inlineCount;
 			}};
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public EntityResponse getEntity(String entitySetName, Object entityKey) {
 		final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);

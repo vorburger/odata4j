@@ -90,6 +90,11 @@ public class AtomFeedWriter extends BaseWriter {
 		
 		writeElement(writer,"link",null,"rel","self","title",entitySetName,"href",entitySetName);
 		
+		Integer inlineCount = response.getInlineCount();
+		if (inlineCount != null){
+			writeElement(writer,"m:count",inlineCount.toString());
+		}
+		
 		for(OEntity entity : response.getEntities()){
 			writer.startElement("entry");
 			writeEntry(writer,entity.getKeyProperties(),entity.getProperties(),entitySetName,baseUri,updated,ees);
