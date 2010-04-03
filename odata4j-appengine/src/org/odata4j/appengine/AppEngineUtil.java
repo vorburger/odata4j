@@ -1,4 +1,4 @@
-package odata4j.appengine;
+package org.odata4j.appengine;
 
 public class AppEngineUtil {
 	public static final String ENVIRONMENT_PROPNAME = "com.google.appengine.runtime.environment";

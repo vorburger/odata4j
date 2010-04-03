@@ -3,7 +3,7 @@
 	<application>odata4j-sample</application>
 	<version>1</version>
 	<system-properties>
-       <property name="odata4j.producerfactory" value="odata4j.appengine.DatastoreProducerFactory" />
+       <property name="odata4j.producerfactory" value="org.odata4j.appengine.DatastoreProducerFactory" />
        <property name="odata4j.datastore.namespace" value="Datastore" />
        <property name="odata4j.datastore.devkinds" value="Kind1" />
        <property name="odata4j.datastore.prodkinds" value="Kind1" />

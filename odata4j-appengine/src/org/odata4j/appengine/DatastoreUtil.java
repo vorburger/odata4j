@@ -1,4 +1,4 @@
-package odata4j.appengine;
+package org.odata4j.appengine;
 
 import java.util.ArrayList;
 import java.util.List;
