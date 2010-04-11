@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.joda.time.LocalDateTime;
+import org.odata4j.core.ODataConstants;
+import org.odata4j.core.OEntities;
 import org.odata4j.core.OEntity;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
@@ -38,8 +40,8 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.sun.jersey.api.NotFoundException;
 
-import core4j.Enumerable;
-import core4j.Func1;
+import org.core4j.Enumerable;
+import org.core4j.Func1;
 
 public class DatastoreProducer implements ODataProducer {
 
@@ -67,21 +69,21 @@ public class DatastoreProducer implements ODataProducer {
         List<EdmEntityType> entityTypes = new ArrayList<EdmEntityType>();
 
         List<EdmProperty> properties = new ArrayList<EdmProperty>();
-        properties.add(new EdmProperty(ID_PROPNAME, EdmType.INT64, false, null));
+        properties.add(new EdmProperty(ID_PROPNAME, EdmType.INT64, false));
 
         for(String kind : kinds) {
-            EdmEntityType eet = new EdmEntityType(namespace, kind, ID_PROPNAME, properties, null);
+            EdmEntityType eet = new EdmEntityType(namespace, kind,null,Enumerable.create( ID_PROPNAME).toList(), properties, null);
             EdmEntitySet ees = new EdmEntitySet(kind, eet);
             entitySets.add(ees);
             entityTypes.add(eet);
         }
 
-        EdmEntityContainer container = new EdmEntityContainer(CONTAINER_NAME, true, entitySets, null);
+        EdmEntityContainer container = new EdmEntityContainer(CONTAINER_NAME, true, null, entitySets, null,null);
         containers.add(container);
 
-        EdmSchema schema = new EdmSchema(namespace, entityTypes, null, containers);
+        EdmSchema schema = new EdmSchema(namespace, entityTypes, null, null, containers);
         schemas.add(schema);
-        EdmDataServices rt = new EdmDataServices(schemas);
+        EdmDataServices rt = new EdmDataServices(ODataConstants.DATA_SERVICE_VERSION, schemas);
         return rt;
     }
 
@@ -262,20 +264,9 @@ public class DatastoreProducer implements ODataProducer {
                 throw new UnsupportedOperationException(propertyValue.getClass().getName());
             }
         }
-        final List<OProperty<?>> keyProperties = properties.subList(0, 1);
 
-        return new OEntity() {
-
-            @Override
-            public List<OProperty<?>> getKeyProperties() {
-                return keyProperties;
-            }
-
-            @Override
-            public List<OProperty<?>> getProperties() {
-                return properties;
-            }
-        };
+        return OEntities.create(properties);
+        
     }
 
     private static final Set<EdmType> supportedTypes = Enumerable.create(EdmType.BOOLEAN, EdmType.BYTE, EdmType.STRING, EdmType.INT16, EdmType.INT32, EdmType.INT64, EdmType.SINGLE, EdmType.DOUBLE, EdmType.DATETIME, EdmType.BINARY // only up to 500 bytes MAX_SHORT_BLOB_PROPERTY_LENGTH

@@ -6,7 +6,7 @@ import java.util.Properties;
 import org.odata4j.producer.ODataProducer;
 import org.odata4j.producer.ODataProducerFactory;
 
-import core4j.Enumerable;
+import org.core4j.Enumerable;
 
 public class DatastoreProducerFactory implements ODataProducerFactory {
 
