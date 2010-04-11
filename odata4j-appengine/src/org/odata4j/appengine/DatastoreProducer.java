@@ -50,10 +50,12 @@ public class DatastoreProducer implements ODataProducer {
 
     private final EdmDataServices metadata;
     private final String namespace;
+    private final DatastoreService datastore;
 
     public DatastoreProducer(String namespace, List<String> kinds) {
         this.namespace = namespace;
         this.metadata = buildMetadata(kinds);
+        this.datastore = DatastoreServiceFactory.getDatastoreService();
     }
 
     @Override
@@ -118,7 +120,6 @@ public class DatastoreProducer implements ODataProducer {
     @Override
     public EntitiesResponse getEntities(String entitySetName, QueryInfo queryInfo) {
 
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
         Query q = new Query(entitySetName);
         if (queryInfo.filter != null)
@@ -172,8 +173,6 @@ public class DatastoreProducer implements ODataProducer {
 
         applyProperties(e, properties);
 
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-
         datastore.put(e);
 
         final OEntity entity = toOEntity(e);
@@ -197,7 +196,6 @@ public class DatastoreProducer implements ODataProducer {
         String kind = ees.type.name;
 
         long id = Long.parseLong(entityKey.toString());
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         datastore.delete(KeyFactory.createKey(kind, id));
     }
 
@@ -208,7 +206,7 @@ public class DatastoreProducer implements ODataProducer {
         if (e == null)
             throw new NotFoundException();
         applyProperties(e, properties);
-
+        datastore.put(e);
     }
 
     @Override
@@ -222,7 +220,7 @@ public class DatastoreProducer implements ODataProducer {
             e.removeProperty(name);
 
         applyProperties(e, properties);
-
+        datastore.put(e);
     }
 
     private static OEntity toOEntity(Entity entity) {
@@ -306,7 +304,6 @@ public class DatastoreProducer implements ODataProducer {
         String kind = ees.type.name;
 
         long id = Long.parseLong(entityKey.toString());
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         try {
             return datastore.get(KeyFactory.createKey(kind, id));
         } catch (EntityNotFoundException e1) {
