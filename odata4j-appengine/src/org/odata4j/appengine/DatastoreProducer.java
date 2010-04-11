@@ -45,7 +45,7 @@ import org.core4j.Func1;
 
 public class DatastoreProducer implements ODataProducer {
 
-    private static final String ID_PROPNAME = "id";
+    public static final String ID_PROPNAME = "id";
     private static final String CONTAINER_NAME = "Container";
 
     private final EdmDataServices metadata;
@@ -232,6 +232,8 @@ public class DatastoreProducer implements ODataProducer {
 
         for(String name : entity.getProperties().keySet()) {
             Object propertyValue = entity.getProperty(name);
+            if (propertyValue==null)
+                continue;
             if (propertyValue instanceof String) {
                 properties.add(OProperties.string(name, (String) propertyValue));
             } else if (propertyValue instanceof Integer) {

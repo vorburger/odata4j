@@ -24,7 +24,7 @@ public class DatastoreProducerFactory implements ODataProducerFactory {
         List<String> kinds = buildKinds();
 
         String namespace = NAMESPACE_PROPDEFAULT;
-        String namespaceProp = System.getProperty(DEVKINDS_PROPNAME);
+        String namespaceProp = System.getProperty(NAMESPACE_PROPNAME);
         if (namespaceProp != null && namespaceProp.trim().length() > 0)
             namespace = namespaceProp.trim();
         return new DatastoreProducer(namespace, kinds);
