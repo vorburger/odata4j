@@ -9,6 +9,7 @@ import org.joda.time.LocalDateTime;
 import org.odata4j.core.ODataConstants;
 import org.odata4j.core.OEntities;
 import org.odata4j.core.OEntity;
+import org.odata4j.core.OLink;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmDataServices;
@@ -160,6 +161,11 @@ public class DatastoreProducer implements ODataProducer {
             public Integer getInlineCount() {
                 return inlineCount;
             }
+            
+            @Override
+            public String getSkipToken() {
+               return null;
+            }
         };
 
     }
@@ -265,7 +271,7 @@ public class DatastoreProducer implements ODataProducer {
             }
         }
 
-        return OEntities.create(properties);
+        return OEntities.create(properties,new ArrayList<OLink>());
         
     }
 
