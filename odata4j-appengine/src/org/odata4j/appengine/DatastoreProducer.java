@@ -75,7 +75,7 @@ public class DatastoreProducer implements ODataProducer {
         properties.add(new EdmProperty(ID_PROPNAME, EdmType.INT64, false));
 
         for(String kind : kinds) {
-            EdmEntityType eet = new EdmEntityType(namespace, kind,null,Enumerable.create( ID_PROPNAME).toList(), properties, null);
+            EdmEntityType eet = new EdmEntityType(namespace, null, kind,null,Enumerable.create( ID_PROPNAME).toList(), properties, null);
             EdmEntitySet ees = new EdmEntitySet(kind, eet);
             entitySets.add(ees);
             entityTypes.add(eet);
@@ -84,7 +84,7 @@ public class DatastoreProducer implements ODataProducer {
         EdmEntityContainer container = new EdmEntityContainer(CONTAINER_NAME, true, null, entitySets, null,null);
         containers.add(container);
 
-        EdmSchema schema = new EdmSchema(namespace, entityTypes, null, null, containers);
+        EdmSchema schema = new EdmSchema(namespace, null, entityTypes, null, null, containers);
         schemas.add(schema);
         EdmDataServices rt = new EdmDataServices(ODataConstants.DATA_SERVICE_VERSION, schemas);
         return rt;
