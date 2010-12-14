@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.core4j.Enumerable;
+import org.core4j.Func1;
 import org.joda.time.LocalDateTime;
 import org.odata4j.core.ODataConstants;
 import org.odata4j.core.OEntities;
@@ -19,10 +21,23 @@ import org.odata4j.edm.EdmEntityType;
 import org.odata4j.edm.EdmProperty;
 import org.odata4j.edm.EdmSchema;
 import org.odata4j.edm.EdmType;
-import org.odata4j.expression.*;
+import org.odata4j.expression.AndExpression;
+import org.odata4j.expression.BinaryCommonExpression;
+import org.odata4j.expression.BoolCommonExpression;
+import org.odata4j.expression.EntitySimpleProperty;
+import org.odata4j.expression.EqExpression;
+import org.odata4j.expression.Expression;
+import org.odata4j.expression.GeExpression;
+import org.odata4j.expression.GtExpression;
+import org.odata4j.expression.LeExpression;
+import org.odata4j.expression.LiteralExpression;
+import org.odata4j.expression.LtExpression;
+import org.odata4j.expression.NeExpression;
+import org.odata4j.expression.OrderByExpression;
 import org.odata4j.producer.EntitiesResponse;
 import org.odata4j.producer.EntityResponse;
 import org.odata4j.producer.InlineCount;
+import org.odata4j.producer.NavPropertyResponse;
 import org.odata4j.producer.ODataProducer;
 import org.odata4j.producer.QueryInfo;
 
@@ -35,14 +50,11 @@ import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.ShortBlob;
-import com.google.appengine.api.datastore.Text;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.SortDirection;
-import com.sun.jersey.api.NotFoundException;
-
-import org.core4j.Enumerable;
-import org.core4j.Func1;
+import com.google.appengine.api.datastore.ShortBlob;
+import com.google.appengine.api.datastore.Text;
+//import com.sun.jersey.api.NotFoundException;
 
 public class DatastoreProducer implements ODataProducer {
 
@@ -100,9 +112,9 @@ public class DatastoreProducer implements ODataProducer {
         final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
         Entity e = findEntity(entitySetName, entityKey);
         if (e == null)
-            throw new NotFoundException();
+            throw new RuntimeException("entity " + entitySetName + " with key " + entityKey + " not found!");
 
-        final OEntity entity = toOEntity(e);
+        final OEntity entity = toOEntity(ees, e);
         return new EntityResponse() {
 
             @Override
@@ -116,6 +128,12 @@ public class DatastoreProducer implements ODataProducer {
             }
         };
 
+    }
+    
+    @Override
+    public NavPropertyResponse getNavProperty(String entitySetName,
+	    Object entityKey, String navProp, QueryInfo queryInfo) {
+	throw new UnsupportedOperationException("Not yet supported");
     }
 
     @Override
@@ -141,7 +159,7 @@ public class DatastoreProducer implements ODataProducer {
 
         final List<OEntity> entities = Enumerable.create(iter).select(new Func1<Entity, OEntity>() {
             public OEntity apply(Entity input) {
-                return toOEntity(input);
+                return toOEntity(ees, input);
             }
         }).toList();
 
@@ -171,22 +189,22 @@ public class DatastoreProducer implements ODataProducer {
     }
 
     @Override
-    public EntityResponse createEntity(String entitySetName, List<OProperty<?>> properties) {
+    public EntityResponse createEntity(String entitySetName, OEntity entity) {
         final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
         String kind = ees.type.name;
 
         Entity e = new Entity(kind);
 
-        applyProperties(e, properties);
+        applyProperties(e, entity.getProperties());
 
         datastore.put(e);
 
-        final OEntity entity = toOEntity(e);
+        final OEntity createdEntity = toOEntity(ees, e);
         return new EntityResponse() {
 
             @Override
             public OEntity getEntity() {
-                return entity;
+                return createdEntity;
             }
 
             @Override
@@ -206,30 +224,31 @@ public class DatastoreProducer implements ODataProducer {
     }
 
     @Override
-    public void mergeEntity(String entitySetName, Object entityKey, List<OProperty<?>> properties) {
+    public void mergeEntity(String entitySetName, Object entityKey, OEntity entity) {
 
         Entity e = findEntity(entitySetName, entityKey);
         if (e == null)
-            throw new NotFoundException();
-        applyProperties(e, properties);
+            throw new RuntimeException("entity " + entitySetName + " with key " + entityKey + " not found!");
+
+        applyProperties(e, entity.getProperties());
         datastore.put(e);
     }
 
     @Override
-    public void updateEntity(String entitySetName, Object entityKey, List<OProperty<?>> properties) {
+    public void updateEntity(String entitySetName, Object entityKey, OEntity entity) {
         Entity e = findEntity(entitySetName, entityKey);
         if (e == null)
-            throw new NotFoundException();
+            throw new RuntimeException("entity " + entitySetName + " with key " + entityKey + " not found!");
 
         // clear existing props
         for(String name : e.getProperties().keySet())
             e.removeProperty(name);
 
-        applyProperties(e, properties);
+        applyProperties(e, entity.getProperties());
         datastore.put(e);
     }
 
-    private static OEntity toOEntity(Entity entity) {
+    private static OEntity toOEntity(EdmEntitySet ees, Entity entity) {
 
         final List<OProperty<?>> properties = new ArrayList<OProperty<?>>();
         properties.add(OProperties.int64(ID_PROPNAME, entity.getKey().getId()));
@@ -271,8 +290,7 @@ public class DatastoreProducer implements ODataProducer {
             }
         }
 
-        return OEntities.create(properties,new ArrayList<OLink>());
-        
+        return OEntities.create(ees, properties,new ArrayList<OLink>());
     }
 
     private static final Set<EdmType> supportedTypes = Enumerable.create(EdmType.BOOLEAN, EdmType.BYTE, EdmType.STRING, EdmType.INT16, EdmType.INT32, EdmType.INT64, EdmType.SINGLE, EdmType.DOUBLE, EdmType.DATETIME, EdmType.BINARY // only up to 500 bytes MAX_SHORT_BLOB_PROPERTY_LENGTH
