@@ -41,7 +41,7 @@ public class EntitiesActivity extends ListActivity {
         setTitle(link!=null?link.getTitle():entitySet);
         
         ODataConsumer c = ODataConsumer.create(service.getUri());
-        ODataConsumer.DUMP_REQUEST_HEADERS = true;
+        ODataConsumer.dump.requestHeaders(true);
         
         Iterator<OEntity> entities = (link!=null? c.getEntities(link):c.getEntities(entitySet))
             // .top(10)

@@ -40,7 +40,7 @@ public class EntityActivity extends Activity {
         
         setTitle("Entity");
         ODataConsumer c = ODataConsumer.create(service.getUri());
-        ODataConsumer.DUMP_REQUEST_HEADERS = true;
+        ODataConsumer.dump.requestHeaders(true);
         //ODataConsumer.DUMP_RESPONSE_BODY = true;
         OEntity entity = c.getEntity(link).execute();
         log.info("entity:" + entity);

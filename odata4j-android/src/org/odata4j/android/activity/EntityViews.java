@@ -140,7 +140,7 @@ public class EntityViews {
                         
                         // render content, detect html
                         TextView value = new TextView(context);
-                        if (sv.contains("<a ")||sv.contains("<p>")||sv.contains("<P>")||sv.contains("<br>")||sv.contains("<br/>")||sv.contains("<img ")) {
+                        if (sv.contains("<a ")||sv.contains("<p>")||sv.contains("<P>")||sv.contains("<br>")||sv.contains("<br/>")||sv.contains("<img ")||sv.contains("<ul>")) {
                             value.setText(Html.fromHtml(sv));
                             value.setMovementMethod(LinkMovementMethod.getInstance());
                         } else if (sv.startsWith("http://")){
