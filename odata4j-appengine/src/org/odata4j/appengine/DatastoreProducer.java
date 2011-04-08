@@ -11,6 +11,7 @@ import org.joda.time.LocalDateTime;
 import org.odata4j.core.ODataConstants;
 import org.odata4j.core.OEntities;
 import org.odata4j.core.OEntity;
+import org.odata4j.core.OEntityKey;
 import org.odata4j.core.OLink;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
@@ -34,12 +35,13 @@ import org.odata4j.expression.LiteralExpression;
 import org.odata4j.expression.LtExpression;
 import org.odata4j.expression.NeExpression;
 import org.odata4j.expression.OrderByExpression;
+import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.EntitiesResponse;
 import org.odata4j.producer.EntityResponse;
 import org.odata4j.producer.InlineCount;
-import org.odata4j.producer.NavPropertyResponse;
 import org.odata4j.producer.ODataProducer;
 import org.odata4j.producer.QueryInfo;
+import org.odata4j.producer.Responses;
 
 import com.google.appengine.api.datastore.DataTypeUtils;
 import com.google.appengine.api.datastore.DatastoreService;
@@ -71,6 +73,19 @@ public class DatastoreProducer implements ODataProducer {
         this.datastore = DatastoreServiceFactory.getDatastoreService();
     }
 
+    @Override
+    public EntityResponse createEntity(String entitySetName, Object entityKey, String navProp, OEntity entity) {
+    	throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BaseResponse getNavProperty( String entitySetName,
+            Object entityKey,
+            String navProp,
+            QueryInfo queryInfo) {
+    	throw new UnsupportedOperationException();
+    }
+    
     @Override
     public EdmDataServices getMetadata() {
         return metadata;
@@ -114,26 +129,7 @@ public class DatastoreProducer implements ODataProducer {
         if (e == null)
             throw new RuntimeException("entity " + entitySetName + " with key " + entityKey + " not found!");
 
-        final OEntity entity = toOEntity(ees, e);
-        return new EntityResponse() {
-
-            @Override
-            public EdmEntitySet getEntitySet() {
-                return ees;
-            }
-
-            @Override
-            public OEntity getEntity() {
-                return entity;
-            }
-        };
-
-    }
-    
-    @Override
-    public NavPropertyResponse getNavProperty(String entitySetName,
-	    Object entityKey, String navProp, QueryInfo queryInfo) {
-	throw new UnsupportedOperationException("Not yet supported");
+        return Responses.entity(toOEntity(ees, e));
     }
 
     @Override
@@ -147,7 +143,7 @@ public class DatastoreProducer implements ODataProducer {
             applySort(q, queryInfo.orderBy);
         PreparedQuery pq = datastore.prepare(q);
 
-        final Integer inlineCount = queryInfo.inlineCount == InlineCount.ALLPAGES ? pq.countEntities() : null;
+        Integer inlineCount = queryInfo.inlineCount == InlineCount.ALLPAGES ? pq.countEntities() : null;
 
         FetchOptions options = null;
         if (queryInfo.top != null)
@@ -157,35 +153,13 @@ public class DatastoreProducer implements ODataProducer {
 
         Iterable<Entity> iter = options == null ? pq.asIterable() : pq.asIterable(options);
 
-        final List<OEntity> entities = Enumerable.create(iter).select(new Func1<Entity, OEntity>() {
+        List<OEntity> entities = Enumerable.create(iter).select(new Func1<Entity, OEntity>() {
             public OEntity apply(Entity input) {
                 return toOEntity(ees, input);
             }
         }).toList();
 
-        return new EntitiesResponse() {
-
-            @Override
-            public List<OEntity> getEntities() {
-                return entities;
-            }
-
-            @Override
-            public EdmEntitySet getEntitySet() {
-                return ees;
-            }
-
-            @Override
-            public Integer getInlineCount() {
-                return inlineCount;
-            }
-            
-            @Override
-            public String getSkipToken() {
-               return null;
-            }
-        };
-
+        return Responses.entities(entities, ees, inlineCount, null);
     }
 
     @Override
@@ -198,21 +172,11 @@ public class DatastoreProducer implements ODataProducer {
         applyProperties(e, entity.getProperties());
 
         datastore.put(e);
-
-        final OEntity createdEntity = toOEntity(ees, e);
-        return new EntityResponse() {
-
-            @Override
-            public OEntity getEntity() {
-                return createdEntity;
-            }
-
-            @Override
-            public EdmEntitySet getEntitySet() {
-                return ees;
-            }
-        };
+        
+        return Responses.entity(toOEntity(ees, e));
     }
+    
+   
 
     @Override
     public void deleteEntity(String entitySetName, Object entityKey) {
@@ -290,7 +254,7 @@ public class DatastoreProducer implements ODataProducer {
             }
         }
 
-        return OEntities.create(ees, properties,new ArrayList<OLink>());
+        return OEntities.create(ees, OEntityKey.infer(ees, properties), properties,new ArrayList<OLink>());
     }
 
     private static final Set<EdmType> supportedTypes = Enumerable.create(EdmType.BOOLEAN, EdmType.BYTE, EdmType.STRING, EdmType.INT16, EdmType.INT32, EdmType.INT64, EdmType.SINGLE, EdmType.DOUBLE, EdmType.DATETIME, EdmType.BINARY // only up to 500 bytes MAX_SHORT_BLOB_PROPERTY_LENGTH
