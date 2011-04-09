@@ -143,7 +143,7 @@ public class DatastoreProducer implements ODataProducer {
             applySort(q, queryInfo.orderBy);
         PreparedQuery pq = datastore.prepare(q);
 
-        Integer inlineCount = queryInfo.inlineCount == InlineCount.ALLPAGES ? pq.countEntities() : null;
+        Integer inlineCount = queryInfo.inlineCount == InlineCount.ALLPAGES ? pq.countEntities(FetchOptions.Builder.withDefaults()) : null;
 
         FetchOptions options = null;
         if (queryInfo.top != null)
