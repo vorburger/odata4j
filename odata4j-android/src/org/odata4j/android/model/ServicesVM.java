@@ -14,8 +14,8 @@ public class ServicesVM {
         
         rt.add(new ServiceVM("TechEd 2010",ODataEndpoints.TECH_ED));
         rt.add(new ServiceVM("TechEd Europe 2010",ODataEndpoints.EU_TECH_ED));
-        rt.add(new ServiceVM("Mix 2010",ODataEndpoints.MIX10));
-        rt.add(new ServiceVM("Pluralsight",ODataEndpoints.PLURALSIGHT));
+        rt.add(new ServiceVM("eBay",ODataEndpoints.EBAY));
+        rt.add(new ServiceVM("Nuget",ODataEndpoints.NUGET));
         rt.add(new ServiceVM("Agilitrain",ODataEndpoints.AGILITRAIN));
         rt.add(new ServiceVM("Telerik TV",ODataEndpoints.TELERIK_TV));
         
