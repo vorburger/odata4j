@@ -74,13 +74,14 @@ public class DatastoreProducer implements ODataProducer {
     }
 
     @Override
-    public EntityResponse createEntity(String entitySetName, Object entityKey, String navProp, OEntity entity) {
+    public EntityResponse createEntity(String entitySetName, OEntityKey entityKey, String navProp, OEntity entity) {
     	throw new UnsupportedOperationException();
     }
 
     @Override
-    public BaseResponse getNavProperty( String entitySetName,
-            Object entityKey,
+    public BaseResponse getNavProperty(
+            String entitySetName,
+            OEntityKey entityKey,
             String navProp,
             QueryInfo queryInfo) {
     	throw new UnsupportedOperationException();
@@ -123,7 +124,7 @@ public class DatastoreProducer implements ODataProducer {
     }
 
     @Override
-    public EntityResponse getEntity(String entitySetName, Object entityKey) {
+    public EntityResponse getEntity(String entitySetName, OEntityKey entityKey) {
         final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
         Entity e = findEntity(entitySetName, entityKey);
         if (e == null)
@@ -179,30 +180,30 @@ public class DatastoreProducer implements ODataProducer {
    
 
     @Override
-    public void deleteEntity(String entitySetName, Object entityKey) {
-        final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
+    public void deleteEntity(String entitySetName, OEntityKey entityKey) {
+        EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
         String kind = ees.type.name;
 
-        long id = Long.parseLong(entityKey.toString());
+        long id = Long.parseLong(entityKey.asSingleValue().toString());
         datastore.delete(KeyFactory.createKey(kind, id));
     }
 
     @Override
-    public void mergeEntity(String entitySetName, Object entityKey, OEntity entity) {
+    public void mergeEntity(String entitySetName, OEntity entity) {
 
-        Entity e = findEntity(entitySetName, entityKey);
+        Entity e = findEntity(entitySetName, entity.getEntityKey());
         if (e == null)
-            throw new RuntimeException("entity " + entitySetName + " with key " + entityKey + " not found!");
+            throw new RuntimeException("entity " + entitySetName + " with key " + entity.getEntityKey() + " not found!");
 
         applyProperties(e, entity.getProperties());
         datastore.put(e);
     }
 
     @Override
-    public void updateEntity(String entitySetName, Object entityKey, OEntity entity) {
-        Entity e = findEntity(entitySetName, entityKey);
+    public void updateEntity(String entitySetName, OEntity entity) {
+        Entity e = findEntity(entitySetName, entity.getEntityKey());
         if (e == null)
-            throw new RuntimeException("entity " + entitySetName + " with key " + entityKey + " not found!");
+            throw new RuntimeException("entity " + entitySetName + " with key " + entity.getEntityKey() + " not found!");
 
         // clear existing props
         for(String name : e.getProperties().keySet())
@@ -287,11 +288,11 @@ public class DatastoreProducer implements ODataProducer {
         }
     }
 
-    private Entity findEntity(String entitySetName, Object entityKey) {
+    private Entity findEntity(String entitySetName, OEntityKey entityKey) {
         final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
         String kind = ees.type.name;
 
-        long id = Long.parseLong(entityKey.toString());
+        long id = Long.parseLong(entityKey.asSingleValue().toString());
         try {
             return datastore.get(KeyFactory.createKey(kind, id));
         } catch (EntityNotFoundException e1) {

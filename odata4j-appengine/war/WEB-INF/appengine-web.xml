@@ -5,7 +5,7 @@
 	<system-properties>
        <property name="odata4j.producerfactory" value="org.odata4j.appengine.DatastoreProducerFactory" />
        <property name="odata4j.datastore.namespace" value="Datastore" />
-       <property name="odata4j.datastore.devkinds" value="Category,Customer,Employee,Order,Product,Region,Shipper,Supplier,Territory" />
-       <property name="odata4j.datastore.prodkinds" value="Category,Customer,Employee,Order,Product,Region,Shipper,Supplier,Territory" />
+       <property name="odata4j.datastore.devkinds" value="Categories,Suppliers,Order_Details,Products,Customers,Employees,Orders" />
+       <property name="odata4j.datastore.prodkinds" value="Categories,Suppliers,Order_Details,Products,Customers,Employees,Orders" />
     </system-properties>
 </appengine-web-app>
