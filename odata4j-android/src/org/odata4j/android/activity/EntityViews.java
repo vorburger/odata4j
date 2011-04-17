@@ -1,6 +1,5 @@
 package org.odata4j.android.activity;
 
-import java.net.URL;
 import java.util.List;
 
 import org.odata4j.android.AndroidLogger;
@@ -26,7 +25,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -125,18 +123,18 @@ public class EntityViews {
                     String sv = prop.getValue().toString();
                     
                     // render embedded images (disabled for now)
-                    if (false && sv.startsWith("http://") && sv.endsWith(".jpg")){
-                        ImageView value = new ImageView(context);
-                        try {
-                            value.setImageDrawable(android.graphics.drawable.Drawable.createFromStream(new URL(sv).openStream(),"test"));
-                        } catch (Exception e) {
-                           throw new RuntimeException(e);
-                        }
-                        //value.setScaleType(ScaleType.CENTER);
-                       // value.setImageURI(Uri.parse(sv));
-                        row.addView(value);
-                        
-                    } else {
+//                    if (sv.startsWith("http://") && sv.endsWith(".jpg")){
+//                        ImageView value = new ImageView(context);
+//                        try {
+//                            value.setImageDrawable(android.graphics.drawable.Drawable.createFromStream(new URL(sv).openStream(),"test"));
+//                        } catch (Exception e) {
+//                           throw new RuntimeException(e);
+//                        }
+//                        //value.setScaleType(ScaleType.CENTER);
+//                       // value.setImageURI(Uri.parse(sv));
+//                        row.addView(value);
+//                        
+//                    } else {
                         
                         // render content, detect html
                         TextView value = new TextView(context);
@@ -151,7 +149,7 @@ public class EntityViews {
                             value.setText(sv);
                       
                         row.addView(value);
-                    }
+                   // }
                 }
                 layout.addView(row);
             } 

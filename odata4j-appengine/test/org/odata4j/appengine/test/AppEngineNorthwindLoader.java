@@ -14,7 +14,9 @@ public class AppEngineNorthwindLoader {
 	@Test
 	public void load(){
 		ODataConsumer northwindJpa = ODataConsumer.create("http://localhost:8886/JPAProducerExample.svc/");
-		ODataConsumer northwindAppengine  = ODataConsumer.create("http://localhost:8888/datastore.svc/");
+		ODataConsumer northwindAppengine = 
+			ODataConsumer.create("http://localhost:8888/datastore.svc/");
+			//ODataConsumer.create("http://odata4j-sample.appspot.com/datastore.svc/");
 		
 		nuke(northwindAppengine,"Categories");
 		nuke(northwindAppengine,"Suppliers");
