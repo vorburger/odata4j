@@ -3,6 +3,7 @@
       package="org.odata4j.android"
       android:versionCode="1"
       android:versionName="0.3">
+       <uses-sdk android:minSdkVersion="1"  android:targetSdkVersion="4" ></uses-sdk>
     <application android:icon="@drawable/icon" android:label="@string/app_name">
         <activity android:name=".activity.ServicesActivity"
                   android:label="@string/app_name">
@@ -15,6 +16,6 @@
         <activity android:name=".activity.EntitiesActivity" />
 		<activity android:name=".activity.EntityActivity" />
     </application>
-    <uses-sdk android:minSdkVersion="3" />
+   
 	<uses-permission android:name="android.permission.INTERNET" />
 </manifest> 
