@@ -15,20 +15,21 @@ import android.widget.ArrayAdapter;
 
 public class ServicesActivity extends ListActivity {
 
-    private final AndroidLogger log = AndroidLogger.get(getClass());
+  private final AndroidLogger log = AndroidLogger.get(getClass());
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        ServicesVM app = new ServicesVM();
-        setListAdapter(new ArrayAdapter<ServiceVM>(this,R.layout.service,app.getServices()));
-        getListView().setTextFilterEnabled(true);
-        getListView().setOnItemClickListener(new OnItemClickListener(){
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                log.info("onItemClick(%s,%s)",position,id);
-                ServiceVM service = (ServiceVM)parent.getItemAtPosition(position);
-                startActivity(new Intent(ServicesActivity.this, EntitySetsActivity.class).putExtra("service", service));
-            }});
-    }
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    ServicesVM app = new ServicesVM();
+    setListAdapter(new ArrayAdapter<ServiceVM>(this, R.layout.service, app.getServices()));
+    getListView().setTextFilterEnabled(true);
+    getListView().setOnItemClickListener(new OnItemClickListener() {
+      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        log.info("onItemClick(%s,%s)", position, id);
+        ServiceVM service = (ServiceVM) parent.getItemAtPosition(position);
+        startActivity(new Intent(ServicesActivity.this, EntitySetsActivity.class).putExtra("service", service));
+      }
+    });
+  }
 }

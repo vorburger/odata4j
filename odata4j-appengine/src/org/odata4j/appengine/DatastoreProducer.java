@@ -56,310 +56,309 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.datastore.ShortBlob;
 import com.google.appengine.api.datastore.Text;
+
 //import com.sun.jersey.api.NotFoundException;
 
 public class DatastoreProducer implements ODataProducer {
 
-    public static final String ID_PROPNAME = "id";
-    private static final String CONTAINER_NAME = "Container";
+  public static final String ID_PROPNAME = "id";
+  private static final String CONTAINER_NAME = "Container";
 
-    private final EdmDataServices metadata;
-    private final String namespace;
-    private final DatastoreService datastore;
+  private final EdmDataServices metadata;
+  private final String namespace;
+  private final DatastoreService datastore;
 
-    public DatastoreProducer(String namespace, List<String> kinds) {
-        this.namespace = namespace;
-        this.metadata = buildMetadata(kinds);
-        this.datastore = DatastoreServiceFactory.getDatastoreService();
-    }
+  public DatastoreProducer(String namespace, List<String> kinds) {
+    this.namespace = namespace;
+    this.metadata = buildMetadata(kinds);
+    this.datastore = DatastoreServiceFactory.getDatastoreService();
+  }
 
-    @Override
-    public EntityResponse createEntity(String entitySetName, OEntityKey entityKey, String navProp, OEntity entity) {
-    	throw new UnsupportedOperationException();
-    }
+  @Override
+  public EntityResponse createEntity(String entitySetName, OEntityKey entityKey, String navProp, OEntity entity) {
+    throw new UnsupportedOperationException();
+  }
 
-    @Override
-    public BaseResponse getNavProperty(
+  @Override
+  public BaseResponse getNavProperty(
             String entitySetName,
             OEntityKey entityKey,
             String navProp,
             QueryInfo queryInfo) {
-    	throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public EdmDataServices getMetadata() {
-        return metadata;
-    }
+    throw new UnsupportedOperationException();
+  }
 
-    private EdmDataServices buildMetadata(List<String> kinds) {
+  @Override
+  public EdmDataServices getMetadata() {
+    return metadata;
+  }
 
-        List<EdmSchema> schemas = new ArrayList<EdmSchema>();
-        List<EdmEntityContainer> containers = new ArrayList<EdmEntityContainer>();
-        List<EdmEntitySet> entitySets = new ArrayList<EdmEntitySet>();
-        List<EdmEntityType> entityTypes = new ArrayList<EdmEntityType>();
+  private EdmDataServices buildMetadata(List<String> kinds) {
 
-        List<EdmProperty> properties = new ArrayList<EdmProperty>();
-        properties.add(new EdmProperty(ID_PROPNAME, EdmType.INT64, false));
+    List<EdmSchema> schemas = new ArrayList<EdmSchema>();
+    List<EdmEntityContainer> containers = new ArrayList<EdmEntityContainer>();
+    List<EdmEntitySet> entitySets = new ArrayList<EdmEntitySet>();
+    List<EdmEntityType> entityTypes = new ArrayList<EdmEntityType>();
 
-        for(String kind : kinds) {
-            EdmEntityType eet = new EdmEntityType(namespace, null, kind,null,Enumerable.create( ID_PROPNAME).toList(), properties, null);
-            EdmEntitySet ees = new EdmEntitySet(kind, eet);
-            entitySets.add(ees);
-            entityTypes.add(eet);
-        }
+    List<EdmProperty> properties = new ArrayList<EdmProperty>();
+    properties.add(new EdmProperty(ID_PROPNAME, EdmType.INT64, false));
 
-        EdmEntityContainer container = new EdmEntityContainer(CONTAINER_NAME, true, null, entitySets, null,null);
-        containers.add(container);
-
-        EdmSchema schema = new EdmSchema(namespace, null, entityTypes, null, null, containers);
-        schemas.add(schema);
-        EdmDataServices rt = new EdmDataServices(ODataConstants.DATA_SERVICE_VERSION, schemas);
-        return rt;
+    for (String kind : kinds) {
+      EdmEntityType eet = new EdmEntityType(namespace, null, kind, null, Enumerable.create(ID_PROPNAME).toList(), properties, null);
+      EdmEntitySet ees = new EdmEntitySet(kind, eet);
+      entitySets.add(ees);
+      entityTypes.add(eet);
     }
 
-    @Override
-    public void close() {
-        // noop
-    }
+    EdmEntityContainer container = new EdmEntityContainer(CONTAINER_NAME, true, null, entitySets, null, null);
+    containers.add(container);
 
-    @Override
-    public EntityResponse getEntity(String entitySetName, OEntityKey entityKey) {
-        final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
-        Entity e = findEntity(entitySetName, entityKey);
-        if (e == null)
+    EdmSchema schema = new EdmSchema(namespace, null, entityTypes, null, null, containers);
+    schemas.add(schema);
+    EdmDataServices rt = new EdmDataServices(ODataConstants.DATA_SERVICE_VERSION, schemas);
+    return rt;
+  }
+
+  @Override
+  public void close() {
+    // noop
+  }
+
+  @Override
+  public EntityResponse getEntity(String entitySetName, OEntityKey entityKey) {
+    final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
+    Entity e = findEntity(entitySetName, entityKey);
+    if (e == null)
             throw new RuntimeException("entity " + entitySetName + " with key " + entityKey + " not found!");
 
-        return Responses.entity(toOEntity(ees, e));
-    }
+    return Responses.entity(toOEntity(ees, e));
+  }
 
-    @Override
-    public EntitiesResponse getEntities(String entitySetName, QueryInfo queryInfo) {
+  @Override
+  public EntitiesResponse getEntities(String entitySetName, QueryInfo queryInfo) {
 
-        final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
-        Query q = new Query(entitySetName);
-        if (queryInfo.filter != null)
+    final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
+    Query q = new Query(entitySetName);
+    if (queryInfo.filter != null)
             applyFilter(q, queryInfo.filter);
-        if (queryInfo.orderBy != null && queryInfo.orderBy.size() > 0)
+    if (queryInfo.orderBy != null && queryInfo.orderBy.size() > 0)
             applySort(q, queryInfo.orderBy);
-        PreparedQuery pq = datastore.prepare(q);
+    PreparedQuery pq = datastore.prepare(q);
 
-        Integer inlineCount = queryInfo.inlineCount == InlineCount.ALLPAGES ? pq.countEntities(FetchOptions.Builder.withDefaults()) : null;
+    Integer inlineCount = queryInfo.inlineCount == InlineCount.ALLPAGES ? pq.countEntities(FetchOptions.Builder.withDefaults()) : null;
 
-        FetchOptions options = null;
-        if (queryInfo.top != null)
+    FetchOptions options = null;
+    if (queryInfo.top != null)
             options = FetchOptions.Builder.withLimit(queryInfo.top);
-        if (queryInfo.skip != null)
+    if (queryInfo.skip != null)
             options = options == null ? FetchOptions.Builder.withOffset(queryInfo.skip) : options.offset(queryInfo.skip);
 
-        Iterable<Entity> iter = options == null ? pq.asIterable() : pq.asIterable(options);
+    Iterable<Entity> iter = options == null ? pq.asIterable() : pq.asIterable(options);
 
-        List<OEntity> entities = Enumerable.create(iter).select(new Func1<Entity, OEntity>() {
-            public OEntity apply(Entity input) {
-                return toOEntity(ees, input);
-            }
-        }).toList();
+    List<OEntity> entities = Enumerable.create(iter).select(new Func1<Entity, OEntity>() {
+      public OEntity apply(Entity input) {
+        return toOEntity(ees, input);
+      }
+    }).toList();
 
-        return Responses.entities(entities, ees, inlineCount, null);
-    }
+    return Responses.entities(entities, ees, inlineCount, null);
+  }
 
-    @Override
-    public EntityResponse createEntity(String entitySetName, OEntity entity) {
-        final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
-        String kind = ees.type.name;
+  @Override
+  public EntityResponse createEntity(String entitySetName, OEntity entity) {
+    final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
+    String kind = ees.type.name;
 
-        Entity e = new Entity(kind);
+    Entity e = new Entity(kind);
 
-        applyProperties(e, entity.getProperties());
+    applyProperties(e, entity.getProperties());
 
-        datastore.put(e);
-        
-        return Responses.entity(toOEntity(ees, e));
-    }
-    
-   
+    datastore.put(e);
 
-    @Override
-    public void deleteEntity(String entitySetName, OEntityKey entityKey) {
-        EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
-        String kind = ees.type.name;
+    return Responses.entity(toOEntity(ees, e));
+  }
 
-        long id = Long.parseLong(entityKey.asSingleValue().toString());
-        datastore.delete(KeyFactory.createKey(kind, id));
-    }
+  @Override
+  public void deleteEntity(String entitySetName, OEntityKey entityKey) {
+    EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
+    String kind = ees.type.name;
 
-    @Override
-    public void mergeEntity(String entitySetName, OEntity entity) {
+    long id = Long.parseLong(entityKey.asSingleValue().toString());
+    datastore.delete(KeyFactory.createKey(kind, id));
+  }
 
-        Entity e = findEntity(entitySetName, entity.getEntityKey());
-        if (e == null)
+  @Override
+  public void mergeEntity(String entitySetName, OEntity entity) {
+
+    Entity e = findEntity(entitySetName, entity.getEntityKey());
+    if (e == null)
             throw new RuntimeException("entity " + entitySetName + " with key " + entity.getEntityKey() + " not found!");
 
-        applyProperties(e, entity.getProperties());
-        datastore.put(e);
-    }
+    applyProperties(e, entity.getProperties());
+    datastore.put(e);
+  }
 
-    @Override
-    public void updateEntity(String entitySetName, OEntity entity) {
-        Entity e = findEntity(entitySetName, entity.getEntityKey());
-        if (e == null)
-            throw new RuntimeException("entity " + entitySetName + " with key " + entity.getEntityKey() + " not found!");
+  @Override
+  public void updateEntity(String entitySetName, OEntity entity) {
+    Entity e = findEntity(entitySetName, entity.getEntityKey());
+    if (e == null)
+      throw new RuntimeException("entity " + entitySetName + " with key " + entity.getEntityKey() + " not found!");
 
-        // clear existing props
-        for(String name : e.getProperties().keySet())
-            e.removeProperty(name);
+    // clear existing props
+    for (String name : e.getProperties().keySet())
+      e.removeProperty(name);
 
-        applyProperties(e, entity.getProperties());
-        datastore.put(e);
-    }
+    applyProperties(e, entity.getProperties());
+    datastore.put(e);
+  }
 
-    private static OEntity toOEntity(EdmEntitySet ees, Entity entity) {
+  private static OEntity toOEntity(EdmEntitySet ees, Entity entity) {
 
-        final List<OProperty<?>> properties = new ArrayList<OProperty<?>>();
-        properties.add(OProperties.int64(ID_PROPNAME, entity.getKey().getId()));
+    final List<OProperty<?>> properties = new ArrayList<OProperty<?>>();
+    properties.add(OProperties.int64(ID_PROPNAME, entity.getKey().getId()));
 
-        for(String name : entity.getProperties().keySet()) {
-            Object propertyValue = entity.getProperty(name);
-            if (propertyValue==null)
+    for (String name : entity.getProperties().keySet()) {
+      Object propertyValue = entity.getProperty(name);
+      if (propertyValue == null)
                 continue;
-            if (propertyValue instanceof String) {
-                properties.add(OProperties.string(name, (String) propertyValue));
-            } else if (propertyValue instanceof Integer) {
-                properties.add(OProperties.int32(name, (Integer) propertyValue));
-            } else if (propertyValue instanceof Long) {
-                properties.add(OProperties.int64(name, (Long) propertyValue));
-            } else if (propertyValue instanceof Short) {
-                properties.add(OProperties.int16(name, (Short) propertyValue));
-            } else if (propertyValue instanceof Boolean) {
-                properties.add(OProperties.boolean_(name, (Boolean) propertyValue));
-            } else if (propertyValue instanceof Float) {
-                properties.add(OProperties.single(name, (Float) propertyValue));
-            } else if (propertyValue instanceof Double) {
-                properties.add(OProperties.double_(name, (Double) propertyValue));
-            } else if (propertyValue instanceof Date) {
-                properties.add(OProperties.datetime(name, (Date) propertyValue));
-            } else if (propertyValue instanceof Byte) {
-                properties.add(OProperties.byte_(name, (Byte) propertyValue));
-            }
+      if (propertyValue instanceof String) {
+        properties.add(OProperties.string(name, (String) propertyValue));
+      } else if (propertyValue instanceof Integer) {
+        properties.add(OProperties.int32(name, (Integer) propertyValue));
+      } else if (propertyValue instanceof Long) {
+        properties.add(OProperties.int64(name, (Long) propertyValue));
+      } else if (propertyValue instanceof Short) {
+        properties.add(OProperties.int16(name, (Short) propertyValue));
+      } else if (propertyValue instanceof Boolean) {
+        properties.add(OProperties.boolean_(name, (Boolean) propertyValue));
+      } else if (propertyValue instanceof Float) {
+        properties.add(OProperties.single(name, (Float) propertyValue));
+      } else if (propertyValue instanceof Double) {
+        properties.add(OProperties.double_(name, (Double) propertyValue));
+      } else if (propertyValue instanceof Date) {
+        properties.add(OProperties.datetime(name, (Date) propertyValue));
+      } else if (propertyValue instanceof Byte) {
+        properties.add(OProperties.byte_(name, (Byte) propertyValue));
+      }
 
-            // Ordinary Java strings stored as properties in Entity objects are limited to 500 characters (DataTypeUtils.MAX_STRING_PROPERTY_LENGTH)
-            // Text are unlimited, but unindexed
-            else if (propertyValue instanceof Text) {
-                Text text = (Text) propertyValue;
-                properties.add(OProperties.string(name, text.getValue()));
-            } else if (propertyValue instanceof ShortBlob) {
-                ShortBlob sb = (ShortBlob) propertyValue;
-                properties.add(OProperties.binary(name, sb.getBytes()));
-            } else {
-                throw new UnsupportedOperationException(propertyValue.getClass().getName());
-            }
-        }
-
-        return OEntities.create(ees, OEntityKey.infer(ees, properties), properties,new ArrayList<OLink>());
+      // Ordinary Java strings stored as properties in Entity objects are limited to 500 characters (DataTypeUtils.MAX_STRING_PROPERTY_LENGTH)
+      // Text are unlimited, but unindexed
+      else if (propertyValue instanceof Text) {
+        Text text = (Text) propertyValue;
+        properties.add(OProperties.string(name, text.getValue()));
+      } else if (propertyValue instanceof ShortBlob) {
+        ShortBlob sb = (ShortBlob) propertyValue;
+        properties.add(OProperties.binary(name, sb.getBytes()));
+      } else {
+        throw new UnsupportedOperationException(propertyValue.getClass().getName());
+      }
     }
 
-    private static final Set<EdmType> supportedTypes = Enumerable.create(EdmType.BOOLEAN, EdmType.BYTE, EdmType.STRING, EdmType.INT16, EdmType.INT32, EdmType.INT64, EdmType.SINGLE, EdmType.DOUBLE, EdmType.DATETIME, EdmType.BINARY // only up to 500 bytes MAX_SHORT_BLOB_PROPERTY_LENGTH
+    return OEntities.create(ees, OEntityKey.infer(ees, properties), properties, new ArrayList<OLink>());
+  }
 
-            ).toSet();
+  private static final Set<EdmType> supportedTypes = Enumerable.create(EdmType.BOOLEAN, EdmType.BYTE, EdmType.STRING,
+      EdmType.INT16, EdmType.INT32, EdmType.INT64, EdmType.SINGLE, EdmType.DOUBLE, EdmType.DATETIME, EdmType.BINARY // only up to 500 bytes MAX_SHORT_BLOB_PROPERTY_LENGTH
+      ).toSet();
 
-    private void applyProperties(Entity e, List<OProperty<?>> properties) {
-        for(OProperty<?> prop : properties) {
-            EdmType type = prop.getType();
-            if (!supportedTypes.contains(type))
+  private void applyProperties(Entity e, List<OProperty<?>> properties) {
+    for (OProperty<?> prop : properties) {
+      EdmType type = prop.getType();
+      if (!supportedTypes.contains(type))
                 throw new UnsupportedOperationException("EdmType not supported: " + type);
 
-            Object value = prop.getValue();
-            if (type.equals(EdmType.STRING)) {
-                String sValue = (String) value;
-                if (sValue != null && sValue.length() > DataTypeUtils.MAX_STRING_PROPERTY_LENGTH)
-                    value = new Text(sValue);
-            } else if (type.equals(EdmType.BINARY)) {
-                byte[] bValue = (byte[]) value;
-                if (bValue != null) {
-                    if (bValue.length > DataTypeUtils.MAX_SHORT_BLOB_PROPERTY_LENGTH)
-                        throw new RuntimeException("Bytes " + bValue.length + " exceeds the max supported length " + DataTypeUtils.MAX_SHORT_BLOB_PROPERTY_LENGTH);
-                    value = new ShortBlob(bValue);
-                }
-            } else if (type.equals(EdmType.DATETIME)) {
-                LocalDateTime dValue = (LocalDateTime) value;
-                value = dValue.toDateTime().toDate(); // TODO review
-            }
-            e.setProperty(prop.getName(), value);
+      Object value = prop.getValue();
+      if (type.equals(EdmType.STRING)) {
+        String sValue = (String) value;
+        if (sValue != null && sValue.length() > DataTypeUtils.MAX_STRING_PROPERTY_LENGTH)
+          value = new Text(sValue);
+      } else if (type.equals(EdmType.BINARY)) {
+        byte[] bValue = (byte[]) value;
+        if (bValue != null) {
+          if (bValue.length > DataTypeUtils.MAX_SHORT_BLOB_PROPERTY_LENGTH)
+            throw new RuntimeException("Bytes " + bValue.length + " exceeds the max supported length " + DataTypeUtils.MAX_SHORT_BLOB_PROPERTY_LENGTH);
+          value = new ShortBlob(bValue);
         }
+      } else if (type.equals(EdmType.DATETIME)) {
+        LocalDateTime dValue = (LocalDateTime) value;
+        value = dValue.toDateTime().toDate(); // TODO review
+      }
+      e.setProperty(prop.getName(), value);
+    }
+  }
+
+  private Entity findEntity(String entitySetName, OEntityKey entityKey) {
+    final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
+    String kind = ees.type.name;
+
+    long id = Long.parseLong(entityKey.asSingleValue().toString());
+    try {
+      return datastore.get(KeyFactory.createKey(kind, id));
+    } catch (EntityNotFoundException e1) {
+      return null;
     }
 
-    private Entity findEntity(String entitySetName, OEntityKey entityKey) {
-        final EdmEntitySet ees = metadata.getEdmEntitySet(entitySetName);
-        String kind = ees.type.name;
+  }
 
-        long id = Long.parseLong(entityKey.asSingleValue().toString());
-        try {
-            return datastore.get(KeyFactory.createKey(kind, id));
-        } catch (EntityNotFoundException e1) {
-            return null;
-        }
+  private void applySort(Query q, List<OrderByExpression> orderBy) {
+    for (OrderByExpression ob : orderBy) {
+      if (!(ob.getExpression() instanceof EntitySimpleProperty))
+        throw new UnsupportedOperationException("Appengine only supports simple property expressions");
+      String propName = ((EntitySimpleProperty) ob.getExpression()).getPropertyName();
+      if (propName.equals("id"))
+        propName = "__key__";
+      q.addSort(propName, ob.isAscending() ? SortDirection.ASCENDING : SortDirection.DESCENDING);
+    }
+  }
 
+  private void applyFilter(Query q, BoolCommonExpression filter) {
+
+    // appengine supports simple filterpredicates (name op value)
+
+    // one filter
+    if (filter instanceof EqExpression)
+      applyFilter(q, (EqExpression) filter, FilterOperator.EQUAL);
+    else if (filter instanceof NeExpression)
+      applyFilter(q, (NeExpression) filter, FilterOperator.NOT_EQUAL);
+    else if (filter instanceof GtExpression)
+      applyFilter(q, (GtExpression) filter, FilterOperator.GREATER_THAN);
+    else if (filter instanceof GeExpression)
+      applyFilter(q, (GeExpression) filter, FilterOperator.GREATER_THAN_OR_EQUAL);
+    else if (filter instanceof LtExpression)
+      applyFilter(q, (LtExpression) filter, FilterOperator.LESS_THAN);
+    else if (filter instanceof LeExpression)
+      applyFilter(q, (LeExpression) filter, FilterOperator.LESS_THAN_OR_EQUAL);
+
+    // and filter
+    else if (filter instanceof AndExpression) {
+      AndExpression e = (AndExpression) filter;
+      applyFilter(q, e.getLHS());
+      applyFilter(q, e.getRHS());
     }
 
-    private void applySort(Query q, List<OrderByExpression> orderBy) {
-        for(OrderByExpression ob : orderBy) {
-            if (!(ob.getExpression() instanceof EntitySimpleProperty))
-                throw new UnsupportedOperationException("Appengine only supports simple property expressions");
-            String propName = ((EntitySimpleProperty) ob.getExpression()).getPropertyName();
-            if (propName.equals("id"))
-                propName = "__key__";
-            q.addSort(propName, ob.isAscending() ? SortDirection.ASCENDING : SortDirection.DESCENDING);
-        }
+    else
+      throw new UnsupportedOperationException("Appengine only supports simple property expressions");
+
+  }
+
+  private void applyFilter(Query q, BinaryCommonExpression e, FilterOperator op) {
+
+    if (!(e.getLHS() instanceof EntitySimpleProperty))
+      throw new UnsupportedOperationException("Appengine only supports simple property expressions");
+    if (!(e.getRHS() instanceof LiteralExpression))
+      throw new UnsupportedOperationException("Appengine only supports simple property expressions");
+
+    EntitySimpleProperty lhs = (EntitySimpleProperty) e.getLHS();
+    LiteralExpression rhs = (LiteralExpression) e.getRHS();
+
+    String propName = lhs.getPropertyName();
+    Object propValue = Expression.literalValue(rhs);
+    if (propName.equals("id")) {
+      propName = "__key__";
+      propValue = KeyFactory.createKey(q.getKind(), (Long) propValue);
     }
 
-    private void applyFilter(Query q, BoolCommonExpression filter) {
-
-        // appengine supports simple filterpredicates (name op value)
-
-        // one filter
-        if (filter instanceof EqExpression)
-            applyFilter(q, (EqExpression) filter, FilterOperator.EQUAL);
-        else if (filter instanceof NeExpression)
-            applyFilter(q, (NeExpression) filter, FilterOperator.NOT_EQUAL);
-        else if (filter instanceof GtExpression)
-            applyFilter(q, (GtExpression) filter, FilterOperator.GREATER_THAN);
-        else if (filter instanceof GeExpression)
-            applyFilter(q, (GeExpression) filter, FilterOperator.GREATER_THAN_OR_EQUAL);
-        else if (filter instanceof LtExpression)
-            applyFilter(q, (LtExpression) filter, FilterOperator.LESS_THAN);
-        else if (filter instanceof LeExpression)
-            applyFilter(q, (LeExpression) filter, FilterOperator.LESS_THAN_OR_EQUAL);
-
-        // and filter
-        else if (filter instanceof AndExpression) {
-            AndExpression e = (AndExpression) filter;
-            applyFilter(q, e.getLHS());
-            applyFilter(q, e.getRHS());
-        }
-
-        else
-            throw new UnsupportedOperationException("Appengine only supports simple property expressions");
-
-    }
-
-    private void applyFilter(Query q, BinaryCommonExpression e, FilterOperator op) {
-
-        if (!(e.getLHS() instanceof EntitySimpleProperty))
-            throw new UnsupportedOperationException("Appengine only supports simple property expressions");
-        if (!(e.getRHS() instanceof LiteralExpression))
-            throw new UnsupportedOperationException("Appengine only supports simple property expressions");
-
-        EntitySimpleProperty lhs = (EntitySimpleProperty) e.getLHS();
-        LiteralExpression rhs = (LiteralExpression) e.getRHS();
-
-        String propName = lhs.getPropertyName();
-        Object propValue = Expression.literalValue(rhs);
-        if (propName.equals("id")) {
-            propName = "__key__";
-            propValue = KeyFactory.createKey(q.getKind(), (Long) propValue);
-        }
-
-        q.addFilter(propName, op, propValue);
-    }
+    q.addFilter(propName, op, propValue);
+  }
 
 }
