@@ -14,7 +14,7 @@ public class ODataTestServiceReadWriteExample extends BaseExample {
   public static void main(String... args) {
 
     // create a new odata consumer pointing to the odata test read-write service
-    ODataConsumer c = ODataConsumer.create(ODATA_TEST_SERVICE_READWRITE2);
+    ODataConsumer c = ODataConsumers.create(ODATA_TEST_SERVICE_READWRITE2);
 
     //ODataConsumer.dump.all(true);
 
