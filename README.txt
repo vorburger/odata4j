@@ -1,3 +1,6 @@
+This is ARCHIVED because https://github.com/odata4j/odata4j is probably what you want to use, instead.
+
+
 This is a Git repo fork of http://www.odata4j.org (http://code.google.com/p/odata4j/).
 
 It was originally created on and by https://github.com/vorburger/odata4j.
